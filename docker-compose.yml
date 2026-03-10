@@ -1,0 +1,35 @@
+version: "3.9"
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║         ServerHardenPro — Docker Compose                        ║
+# ║  Uso: docker-compose up -d                                       ║
+# ║  Panel: http://localhost:8000                                     ║
+# ║  API:   http://localhost:8000/docs                               ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+services:
+
+  # ── Backend FastAPI ────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: shp_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./frontend:/app/../frontend
+      - shp_data:/app/data
+    environment:
+      - DB_PATH=/app/data/shp_database.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  shp_data:
+    driver: local

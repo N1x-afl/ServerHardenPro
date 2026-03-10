@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ServerHarden Pro — Panel de Auditoría</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:      #080c10;
+    --bg2:     #0d1117;
+    --bg3:     #111820;
+    --border:  #1e2d3d;
+    --cyan:    #00e5ff;
+    --cyan2:   #00b4cc;
+    --green:   #39ff6e;
+    --red:     #ff3b5c;
+    --yellow:  #ffd600;
+    --text:    #cdd9e5;
+    --muted:   #4a6274;
+    --mono:    'Share Tech Mono', monospace;
+    --ui:      'Rajdhani', sans-serif;
+    --head:    'Exo 2', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--ui); font-size: 15px; min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px), linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── TOPBAR ── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8,12,16,.93); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px; height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-icon { width: 36px; height: 36px; border: 2px solid var(--cyan); border-radius: 8px; display: grid; place-items: center; font-size: 18px; box-shadow: 0 0 12px rgba(0,229,255,.3); }
+  .logo-text { display: flex; flex-direction: column; line-height: 1; }
+  .logo-text span:first-child { font-family: var(--head); font-weight: 800; font-size: 18px; letter-spacing: 2px; color: #fff; }
+  .logo-text span:first-child em { color: var(--cyan); font-style: normal; }
+  .logo-text span:last-child { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 3px; margin-top: 3px; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .ws-badge { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: 2px; }
+  .ws-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: background .3s; }
+  .ws-dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.4s infinite; }
+  .ws-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  #ws-label { color: var(--muted); }
+  #ws-label.connected { color: var(--green); }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+  .clock { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+  /* ── LAYOUT ── */
+  .wrapper { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 28px 32px; display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+  aside { display: flex; flex-direction: column; gap: 12px; }
+  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+
+  /* ── SERVER CARDS ── */
+  .server-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: border-color .2s, box-shadow .2s; position: relative; overflow: hidden; }
+  .server-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--muted); transition: background .2s; }
+  .server-card.active { border-color: var(--cyan); box-shadow: 0 0 16px rgba(0,229,255,.08); }
+  .server-card.active::before { background: var(--cyan); }
+  .server-card.ok::before { background: var(--green); }
+  .server-card.warn::before { background: var(--yellow); }
+  .server-card.crit::before { background: var(--red); }
+  .sc-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .sc-name { font-family: var(--head); font-weight: 700; font-size: 15px; color: #e8f0f8; }
+  .sc-os { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .sc-badge { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
+  .badge-ok   { background: rgba(57,255,110,.12); color: var(--green); border: 1px solid rgba(57,255,110,.25); }
+  .badge-warn { background: rgba(255,214,0,.12);  color: var(--yellow); border: 1px solid rgba(255,214,0,.25); }
+  .badge-crit { background: rgba(255,59,92,.12);  color: var(--red);    border: 1px solid rgba(255,59,92,.25); }
+  .sc-bar { margin-top: 10px; }
+  .bar-track { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .fill-ok   { background: linear-gradient(90deg, var(--green), #00e676); }
+  .fill-warn { background: linear-gradient(90deg, var(--yellow), #ffab00); }
+  .fill-crit { background: linear-gradient(90deg, var(--red), #ff1744); }
+  .bar-pct { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 5px; display: flex; justify-content: space-between; }
+
+  /* ── LOADER ── */
+  .loader { text-align: center; padding: 40px 20px; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 2px; }
+  .loader::after { content: ''; display: block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; margin: 12px auto 0; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── MAIN ── */
+  main { display: flex; flex-direction: column; gap: 20px; }
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; position: relative; overflow: hidden; animation: fadeSlideIn .4s ease both; }
+  .stat-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; }
+  .stat-card.s-total::after { background: linear-gradient(90deg,var(--cyan),transparent); }
+  .stat-card.s-pass::after  { background: linear-gradient(90deg,var(--green),transparent); }
+  .stat-card.s-fail::after  { background: linear-gradient(90deg,var(--red),transparent); }
+  .stat-card.s-warn::after  { background: linear-gradient(90deg,var(--yellow),transparent); }
+  .stat-icon { font-size: 22px; margin-bottom: 10px; }
+  .stat-val { font-family: var(--head); font-weight: 800; font-size: 34px; line-height: 1; letter-spacing: -1px; }
+  .s-total .stat-val { color: var(--cyan); }
+  .s-pass  .stat-val { color: var(--green); }
+  .s-fail  .stat-val { color: var(--red); }
+  .s-warn  .stat-val { color: var(--yellow); }
+  .stat-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  /* ── PANEL ── */
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .panel-header { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .panel-title { font-family: var(--head); font-weight: 700; font-size: 15px; letter-spacing: 1px; color: #e8f0f8; display: flex; align-items: center; gap: 10px; }
+  .panel-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .btn-group { display: flex; gap: 8px; }
+  .btn { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; border-radius: 6px; cursor: pointer; border: 1px solid; transition: all .2s; }
+  .btn-cyan { border-color: var(--cyan2); color: var(--cyan); background: rgba(0,229,255,.06); }
+  .btn-cyan:hover { background: rgba(0,229,255,.15); box-shadow: 0 0 12px rgba(0,229,255,.2); }
+  .btn-green { border-color: rgba(57,255,110,.4); color: var(--green); background: rgba(57,255,110,.06); }
+  .btn-green:hover { background: rgba(57,255,110,.15); }
+
+  /* ── CHECK TABLE ── */
+  .check-table { width: 100%; border-collapse: collapse; }
+  .check-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: 12px 22px; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg3); }
+  .check-table td { padding: 12px 22px; border-bottom: 1px solid rgba(30,45,61,.6); font-size: 14px; }
+  .check-table tr:last-child td { border-bottom: none; }
+  .check-table tr:hover td { background: rgba(0,229,255,.025); }
+  .cat-tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase; }
+  .cat-SSH       { background: rgba(0,229,255,.1); color: var(--cyan); border: 1px solid rgba(0,229,255,.2); }
+  .cat-Firewall  { background: rgba(57,255,110,.08); color: #5dff8e; border: 1px solid rgba(57,255,110,.18); }
+  .cat-Usuarios  { background: rgba(255,214,0,.08); color: var(--yellow); border: 1px solid rgba(255,214,0,.18); }
+  .cat-Sistema   { background: rgba(179,136,255,.1); color: #c9a0ff; border: 1px solid rgba(179,136,255,.2); }
+  .cat-Auditoría { background: rgba(255,111,0,.1); color: #ff9040; border: 1px solid rgba(255,111,0,.2); }
+  .cat-Red       { background: rgba(0,200,255,.08); color: #00c8ff; border: 1px solid rgba(0,200,255,.18); }
+  .cat-Servicios { background: rgba(255,59,92,.08); color: #ff6b85; border: 1px solid rgba(255,59,92,.18); }
+  .cat-default   { background: rgba(100,100,100,.1); color: #aaa; border: 1px solid rgba(100,100,100,.2); }
+  .cat-Contraseñas { background: rgba(255,214,0,.08); color: var(--yellow); border: 1px solid rgba(255,214,0,.18); }
+  .cat-RDP       { background: rgba(0,229,255,.08); color: var(--cyan); border: 1px solid rgba(0,229,255,.18); }
+  .cat-SMB       { background: rgba(255,111,0,.1); color: #ff9040; border: 1px solid rgba(255,111,0,.2); }
+  .cat-Antivirus { background: rgba(57,255,110,.08); color: var(--green); border: 1px solid rgba(57,255,110,.18); }
+  .cat-Actualizaciones { background: rgba(179,136,255,.1); color: #c9a0ff; border: 1px solid rgba(179,136,255,.2); }
+  .severity { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px; }
+  .sev-ALTA  { background: rgba(255,59,92,.12); color: var(--red); border: 1px solid rgba(255,59,92,.25); }
+  .sev-MEDIA { background: rgba(255,214,0,.1); color: var(--yellow); border: 1px solid rgba(255,214,0,.2); }
+  .sev-BAJA  { background: rgba(57,255,110,.08); color: var(--green); border: 1px solid rgba(57,255,110,.2); }
+  .check-name { font-weight: 600; color: #d0dce8; }
+  .check-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── BOTTOM GRID ── */
+  .bottom-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+  .cat-list { display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; }
+  .cat-row { display: flex; align-items: center; gap: 14px; }
+  .cat-name { font-family: var(--ui); font-weight: 600; font-size: 13px; color: var(--text); width: 120px; flex-shrink: 0; }
+  .cat-bar  { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .cat-pct { font-family: var(--mono); font-size: 12px; width: 38px; text-align: right; }
+
+  /* ── SCORE RING ── */
+  .score-ring { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 6px; }
+  .ring-wrap { position: relative; width: 120px; height: 120px; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-bg   { fill: none; stroke: var(--bg3); stroke-width: 10; }
+  .ring-fill { fill: none; stroke: var(--cyan); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 345; stroke-dashoffset: 345; filter: drop-shadow(0 0 6px var(--cyan)); transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1), stroke .4s; }
+  .ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-pct  { font-family: var(--head); font-weight: 800; font-size: 28px; color: var(--cyan); transition: color .4s; }
+  .ring-sub  { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+  .ring-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+
+  /* ── EVENTS ── */
+  .event-list { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
+  .event-item { display: flex; gap: 12px; align-items: flex-start; padding: 9px 11px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border); animation: fadeSlideIn .3s ease; }
+  .event-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .event-text { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .event-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 50px 20px; font-family: var(--mono); color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; box-shadow: 0 4px 20px rgba(0,0,0,.4); animation: fadeSlideIn .3s ease; max-width: 320px; }
+  .toast-item.ok   { border-left: 3px solid var(--green); color: var(--green); }
+  .toast-item.warn { border-left: 3px solid var(--yellow); color: var(--yellow); }
+  .toast-item.crit { border-left: 3px solid var(--red); color: var(--red); }
+  .toast-item.info { border-left: 3px solid var(--cyan); color: var(--cyan); }
+
+  @keyframes fadeSlideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  footer { position: relative; z-index: 1; text-align: center; padding: 18px; font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div class="logo-text">
+      <span>Server<em>Harden</em>Pro</span>
+      <span>// SECURITY AUDIT PLATFORM</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="ws-badge">
+      <div class="ws-dot" id="ws-dot"></div>
+      <span id="ws-label">CONECTANDO...</span>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- ══ WRAPPER ══ -->
+<div class="wrapper">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <p class="section-label" id="srv-label">// Cargando...</p>
+    <div id="server-list"><div class="loader"></div></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card s-total" style="animation-delay:.05s">
+        <div class="stat-icon">🖥️</div>
+        <div class="stat-val" id="stat-servers">—</div>
+        <div class="stat-label">Servidores</div>
+      </div>
+      <div class="stat-card s-pass" style="animation-delay:.10s">
+        <div class="stat-icon">✅</div>
+        <div class="stat-val" id="stat-pass">—</div>
+        <div class="stat-label">Checks Pasados</div>
+      </div>
+      <div class="stat-card s-fail" style="animation-delay:.15s">
+        <div class="stat-icon">❌</div>
+        <div class="stat-val" id="stat-fail">—</div>
+        <div class="stat-label">Checks Fallidos</div>
+      </div>
+      <div class="stat-card s-warn" style="animation-delay:.20s">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-val" id="stat-warn">—</div>
+        <div class="stat-label">Advertencias</div>
+      </div>
+    </div>
+
+    <!-- CHECKLIST TABLE -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="dot"></div>
+          <span id="detail-title">Seleccioná un servidor</span>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-cyan" onclick="exportPDF()">⬇ PDF</button>
+          <button class="btn btn-green" onclick="exportExcel()">⬇ Excel</button>
+        </div>
+      </div>
+      <div id="checks-container">
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          SELECCIONÁ UN SERVIDOR PARA VER LA AUDITORÍA
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM -->
+    <div class="bottom-grid">
+
+      <!-- CATEGORÍAS -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="dot"></div>Cumplimiento por Categoría</div>
+        </div>
+        <div class="cat-list" id="cat-list">
+          <div class="empty-state" style="padding:20px">
+            <div class="empty-icon">📊</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCORE + EVENTOS -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="dot"></div>Score Global</div>
+          </div>
+          <div class="score-ring">
+            <div class="ring-wrap">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle class="ring-bg" cx="60" cy="60" r="55"/>
+                <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="55"/>
+              </svg>
+              <div class="ring-label">
+                <div class="ring-pct" id="ring-pct">—</div>
+                <div class="ring-sub">SCORE</div>
+              </div>
+            </div>
+            <div class="ring-title">CUMPLIMIENTO GLOBAL</div>
+          </div>
+        </div>
+
+        <div class="panel" style="flex:1;">
+          <div class="panel-header">
+            <div class="panel-title"><div class="dot"></div>Eventos en Vivo</div>
+          </div>
+          <div class="event-list" id="event-list">
+            <div class="event-item">
+              <div class="event-dot" style="background:var(--cyan)"></div>
+              <div>
+                <div class="event-text">Panel iniciado — esperando agentes</div>
+                <div class="event-time">ahora</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer>// ServerHardenPro v0.1 — Fase 5 COMPLETA · FastAPI + SQLite + WebSockets</footer>
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  CONFIG — cambiá la URL si el backend corre en otro host/puerto
+// ══════════════════════════════════════════════════════════════════
+const API  = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : `http://${window.location.hostname}:8000`;
+
+const WS_URL = API.replace('http', 'ws') + '/ws';
+
+let currentServer = null;
+let ws = null;
+
+// ── Clock ─────────────────────────────────────────────────────────
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('es-AR', { hour12: false });
+}, 1000);
+
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg, type = 'info', duration = 4000) {
+  const t = document.createElement('div');
+  t.className = `toast-item ${type}`;
+  t.textContent = msg;
+  document.getElementById('toast').prepend(t);
+  setTimeout(() => t.remove(), duration);
+}
+
+// ── WebSocket ─────────────────────────────────────────────────────
+function connectWS() {
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    document.getElementById('ws-dot').className = 'ws-dot connected';
+    document.getElementById('ws-label').className = 'connected';
+    document.getElementById('ws-label').textContent = 'EN VIVO';
+    toast('Conectado al servidor en tiempo real', 'info');
+  };
+
+  ws.onmessage = ({ data }) => {
+    const msg = JSON.parse(data);
+    if (msg.event === 'new_audit') {
+      addEvent(
+        `${msg.hostname} — Nueva auditoría · Score: ${msg.score}%`,
+        msg.status === 'OK' ? 'var(--green)' : msg.status === 'WARN' ? 'var(--yellow)' : 'var(--red)'
+      );
+      toast(`📡 ${msg.hostname} envió nueva auditoría`, msg.status.toLowerCase());
+      loadServers();
+      loadSummary();
+      if (currentServer === msg.hostname) loadDetail(msg.hostname);
+    }
+    if (msg.event === 'connected' && msg.summary) {
+      renderSummary(msg.summary);
+    }
+  };
+
+  ws.onerror = () => {
+    document.getElementById('ws-dot').className = 'ws-dot error';
+    document.getElementById('ws-label').textContent = 'DESCONECTADO';
+    document.getElementById('ws-label').className = '';
+  };
+
+  ws.onclose = () => {
+    document.getElementById('ws-dot').className = 'ws-dot';
+    document.getElementById('ws-label').textContent = 'RECONECTANDO...';
+    document.getElementById('ws-label').className = '';
+    setTimeout(connectWS, 4000);
+  };
+}
+
+// ── Cargar lista de servidores ────────────────────────────────────
+async function loadServers() {
+  try {
+    const res  = await fetch(`${API}/servers`);
+    const data = await res.json();
+    renderServers(data.servers || []);
+  } catch (e) {
+    document.getElementById('server-list').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div>No se pudo conectar al backend<br><br><small style="font-size:10px">¿Está corriendo uvicorn?</small></div>`;
+  }
+}
+
+function renderServers(servers) {
+  const label = document.getElementById('srv-label');
+  const list  = document.getElementById('server-list');
+  label.textContent = `// Servidores (${servers.length})`;
+
+  if (!servers.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>SIN SERVIDORES AÚN<br><br><small>Ejecutá un agente para ver datos aquí</small></div>`;
+    return;
+  }
+
+  list.innerHTML = servers.map(s => {
+    const cls   = s.status === 'OK' ? 'ok' : s.status === 'WARN' ? 'warn' : 'crit';
+    const badge = s.status === 'OK' ? 'badge-ok' : s.status === 'WARN' ? 'badge-warn' : 'badge-crit';
+    const fill  = `fill-${cls}`;
+    const active = s.hostname === currentServer ? 'active' : '';
+    return `
+      <div class="server-card ${cls} ${active}" onclick="selectServer('${s.hostname}')">
+        <div class="sc-top">
+          <div>
+            <div class="sc-name">${s.hostname}</div>
+            <div class="sc-os">${s.platform?.toUpperCase() || 'LINUX'} · ${s.os?.split(' ').slice(0,3).join(' ') || 'N/A'}</div>
+          </div>
+          <span class="sc-badge ${badge}">${s.status}</span>
+        </div>
+        <div class="sc-bar">
+          <div class="bar-track"><div class="bar-fill ${fill}" style="width:${s.score}%"></div></div>
+          <div class="bar-pct"><span>Cumplimiento</span><span>${s.score}%</span></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Cargar resumen global ─────────────────────────────────────────
+async function loadSummary() {
+  try {
+    const res  = await fetch(`${API}/summary`);
+    const data = await res.json();
+    renderSummary(data);
+  } catch (e) {}
+}
+
+function renderSummary(data) {
+  document.getElementById('stat-servers').textContent = data.servers?.total ?? '—';
+  document.getElementById('stat-pass').textContent    = data.checks?.pass   ?? '—';
+  document.getElementById('stat-fail').textContent    = data.checks?.fail   ?? '—';
+  document.getElementById('stat-warn').textContent    = data.checks?.warn   ?? '—';
+
+  const score = data.avg_score ?? 0;
+  const offset = 345 - (345 * score / 100);
+  document.getElementById('ring-fill').style.strokeDashoffset = offset;
+  document.getElementById('ring-pct').textContent = score + '%';
+
+  const color = score >= 80 ? 'var(--green)' : score >= 60 ? 'var(--yellow)' : 'var(--red)';
+  document.getElementById('ring-fill').style.stroke = color;
+  document.getElementById('ring-pct').style.color   = color;
+}
+
+// ── Seleccionar servidor ──────────────────────────────────────────
+function selectServer(hostname) {
+  currentServer = hostname;
+  document.querySelectorAll('.server-card').forEach(c => {
+    c.classList.toggle('active', c.querySelector('.sc-name')?.textContent === hostname);
+  });
+  loadDetail(hostname);
+}
+
+// ── Cargar detalle de servidor ────────────────────────────────────
+async function loadDetail(hostname) {
+  document.getElementById('detail-title').textContent = `${hostname} — cargando...`;
+  document.getElementById('checks-container').innerHTML = '<div class="loader"></div>';
+
+  try {
+    const res  = await fetch(`${API}/servers/${hostname}`);
+    const data = await res.json();
+    renderDetail(data);
+  } catch (e) {
+    document.getElementById('checks-container').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">❌</div>Error al cargar datos</div>`;
+  }
+}
+
+function renderDetail(data) {
+  document.getElementById('detail-title').textContent =
+    `${data.server.hostname} — Resultado de Auditoría`;
+
+  // Tabla de checks
+  if (!data.checks?.length) {
+    document.getElementById('checks-container').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">📭</div>SIN CHECKS DISPONIBLES</div>`;
+    return;
+  }
+
+  const rows = data.checks.map(c => {
+    const icon = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
+    const catCls = `cat-${c.category.replace(/\s/g,'')}`;
+    return `
+      <tr>
+        <td>${icon}</td>
+        <td><span class="cat-tag ${catCls}">${c.category}</span></td>
+        <td>
+          <div class="check-name">${c.name}</div>
+          <div class="check-desc">${c.description}</div>
+        </td>
+        <td><span class="severity sev-${c.severity}">${c.severity}</span></td>
+        <td><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${c.detail || ''}</span></td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('checks-container').innerHTML = `
+    <table class="check-table">
+      <thead><tr>
+        <th>Estado</th><th>Categoría</th><th>Verificación</th><th>Severidad</th><th>Detalle</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  // Categorías
+  renderCategories(data.category_scores || {});
+}
+
+function renderCategories(cats) {
+  const list = document.getElementById('cat-list');
+  const entries = Object.entries(cats);
+  if (!entries.length) { list.innerHTML = ''; return; }
+
+  list.innerHTML = entries.map(([cat, pct]) => {
+    const cls = pct >= 80 ? 'fill-ok' : pct >= 60 ? 'fill-warn' : 'fill-crit';
+    const color = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
+    return `
+      <div class="cat-row">
+        <span class="cat-name">${cat}</span>
+        <div class="cat-bar"><div class="cat-bar-fill ${cls}" style="width:${pct}%"></div></div>
+        <span class="cat-pct" style="color:${color}">${pct}%</span>
+      </div>`;
+  }).join('');
+}
+
+// ── Agregar evento en vivo ────────────────────────────────────────
+function addEvent(text, color = 'var(--cyan)') {
+  const list = document.getElementById('event-list');
+  const now  = new Date().toLocaleTimeString('es-AR', { hour12: false });
+  const item = document.createElement('div');
+  item.className = 'event-item';
+  item.innerHTML = `
+    <div class="event-dot" style="background:${color};box-shadow:0 0 6px ${color}"></div>
+    <div>
+      <div class="event-text">${text}</div>
+      <div class="event-time">${now}</div>
+    </div>`;
+  list.prepend(item);
+  // Máximo 20 eventos
+  while (list.children.length > 20) list.lastChild.remove();
+}
+
+// ── Exportar PDF ──────────────────────────────────────────────────
+async function exportPDF() {
+  if (!currentServer) { toast('Seleccioná un servidor primero', 'warn'); return; }
+  toast(`Generando PDF de ${currentServer}...`, 'info');
+  try {
+    const res = await fetch(`${API}/servers/${currentServer}/report/pdf`);
+    if (!res.ok) throw new Error();
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `reporte_${currentServer}.pdf`; a.click();
+    toast('PDF descargado ✓', 'ok');
+  } catch {
+    toast('El generador de PDF estará disponible con el backend corriendo', 'warn');
+  }
+}
+
+// ── Exportar Excel ────────────────────────────────────────────────
+async function exportExcel() {
+  if (!currentServer) { toast('Seleccioná un servidor primero', 'warn'); return; }
+  toast(`Generando Excel de ${currentServer}...`, 'info');
+  try {
+    const res = await fetch(`${API}/servers/${currentServer}/report/excel`);
+    if (!res.ok) throw new Error();
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `reporte_${currentServer}.xlsx`; a.click();
+    toast('Excel descargado ✓', 'ok');
+  } catch {
+    toast('El generador de Excel estará disponible con el backend corriendo', 'warn');
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+(async () => {
+  connectWS();
+  await loadServers();
+  await loadSummary();
+  // Recargar cada 60 segundos como fallback
+  setInterval(() => { loadServers(); loadSummary(); }, 60000);
+})();
+</script>
+</body>
+</html>
