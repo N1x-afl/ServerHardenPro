@@ -60,7 +60,7 @@ git clone https://github.com/N1x-afl/ServerHardenPro.git
 cd ServerHardenPro
 
 # 2. Levantar el backend + panel
-docker-compose up -d
+docker compose up -d
 
 # 3. Abrir el panel
 # http://localhost:8000
