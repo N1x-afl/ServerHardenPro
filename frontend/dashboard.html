@@ -96,7 +96,7 @@ header {
 
 /* ══ SIDEBAR ══════════════════════════════════════════════════════ */
 .sidebar {
-  width: 280px; min-width: 280px;
+  width: 310px; min-width: 310px;
   border-right: 1px solid var(--border);
   padding: 20px 14px;
   display: flex; flex-direction: column; gap: 10px;
@@ -175,6 +175,8 @@ header {
 .stat-card.s-pass::after  { background: linear-gradient(90deg,var(--green),transparent); }
 .stat-card.s-fail::after  { background: linear-gradient(90deg,var(--red),transparent); }
 .stat-card.s-warn::after  { background: linear-gradient(90deg,var(--yellow),transparent); }
+.stat-card.s-avg::after   { background: linear-gradient(90deg,var(--cyan),transparent); }
+.s-avg .stat-val { color: var(--cyan); }
 .stat-icon { font-size: 26px; margin-bottom: 12px; }
 .stat-val { font-family: var(--head); font-weight: 800; font-size: 42px; line-height: 1; letter-spacing: -1px; }
 .s-total .stat-val { color: var(--cyan); }
@@ -330,6 +332,10 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
     </div>
   </div>
   <div class="header-right">
+    <button class="theme-btn" onclick="refreshAll()" id="refresh-btn">
+      <span>🔄</span>
+      <span>ACTUALIZAR</span>
+    </button>
     <button class="theme-btn" onclick="toggleTheme()">
       <span class="theme-icon" id="theme-icon">☀️</span>
       <span id="theme-label">MODO CLARO</span>
@@ -338,7 +344,10 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
       <div class="ws-dot" id="ws-dot"></div>
       <span id="ws-label">CONECTANDO...</span>
     </div>
-    <div class="clock" id="clock">--:--:--</div>
+    <div class="clock">
+      <div id="clock-time" style="font-size:14px;letter-spacing:1px;">--:--:--</div>
+      <div id="clock-date" style="font-size:10px;color:var(--muted);letter-spacing:1px;text-align:right;margin-top:2px;">--/--/----</div>
+    </div>
   </div>
 </header>
 
@@ -375,6 +384,21 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
         <div class="stat-icon">⚠️</div>
         <div class="stat-val" id="stat-warn">—</div>
         <div class="stat-label">Advertencias</div>
+      </div>
+      <div class="stat-card s-avg" style="animation-delay:.25s;grid-column:span 4;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div class="stat-icon">📊</div>
+            <div class="stat-val" id="stat-avg" style="font-size:42px;">—</div>
+            <div class="stat-label">Cumplimiento Promedio Global</div>
+          </div>
+          <div id="avg-bar-wrap" style="flex:1;max-width:400px;min-width:200px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;">PROGRESO GLOBAL</div>
+            <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden;">
+              <div id="avg-bar" style="height:100%;border-radius:5px;width:0%;transition:width 1.2s cubic-bezier(.4,0,.2,1);"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -480,7 +504,7 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
       </div>
     </div>
 
-    <footer>// ServerHardenPro v0.2 — FastAPI + SQLite + WebSockets + Chart.js</footer>
+    <footer>// ServerHardenPro v0.3 — FastAPI + SQLite + WebSockets + Chart.js</footer>
   </div>
 </div>
 
@@ -496,11 +520,29 @@ let currentServer = null;
 let scoreChart = null;
 let ws = null;
 
+// ── Refresh all ───────────────────────────────────────────────
+async function refreshAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+  await loadServers();
+  await loadSummary();
+  if (currentServer) await loadDetail(currentServer);
+  toast('Datos actualizados ✓', 'ok', 2000);
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+}
+
 // ── Clock ──────────────────────────────────────────────────────
-setInterval(() => {
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('es-AR', { hour12: false });
-}, 1000);
+function updateClock() {
+  const now = new Date();
+  const time = now.toLocaleTimeString('es-AR', { hour12: false });
+  const date = now.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  document.getElementById('clock-time').textContent = time;
+  document.getElementById('clock-date').textContent = date;
+}
+setInterval(updateClock, 1000);
+updateClock();
 
 // ══════════════════════════════════════════════════════════════════
 //  MODO CLARO / OSCURO
@@ -681,6 +723,7 @@ function renderServers(servers) {
             <div class="sc-info">
               <div class="sc-name">${s.hostname}</div>
               <div class="sc-os">${(s.platform||'linux').toUpperCase()} · ${(s.os||'').split(' ').slice(0,3).join(' ')}</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);margin-top:3px;opacity:.8">⬡ ${s.ip || 'N/A'}</div>
             </div>
           </div>
           <span class="sc-badge badge-${cls}">${s.status}</span>
@@ -718,6 +761,18 @@ function renderSummary(data) {
   const color = score >= 80 ? 'var(--green)' : score >= 60 ? 'var(--yellow)' : 'var(--red)';
   document.getElementById('ring-fill').style.stroke = color;
   document.getElementById('ring-pct').style.color   = color;
+
+  // Stat card promedio
+  const avgEl  = document.getElementById('stat-avg');
+  const avgBar = document.getElementById('avg-bar');
+  if (avgEl) {
+    animateCount(avgEl, score);
+    avgEl.textContent = score + '%';
+    if (avgBar) {
+      avgBar.style.width = score + '%';
+      avgBar.style.background = color;
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
