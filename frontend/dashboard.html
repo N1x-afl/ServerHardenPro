@@ -21,164 +21,383 @@
     --mono:    'Share Tech Mono', monospace;
     --ui:      'Rajdhani', sans-serif;
     --head:    'Exo 2', sans-serif;
+    --sidebar: 300px;
+    --header:  72px;
+    --radius:  12px;
+    --gap:     24px;
   }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--ui); font-size: 15px; min-height: 100vh; overflow-x: hidden; }
+
+  html { font-size: 16px; }
+
+  /* ── Escalado para pantallas grandes ── */
+  @media (min-width: 1600px) { html { font-size: 17px; } :root { --sidebar: 320px; --gap: 28px; } }
+  @media (min-width: 1920px) { html { font-size: 18px; } :root { --sidebar: 340px; --gap: 32px; } }
+  @media (min-width: 2560px) { html { font-size: 20px; } :root { --sidebar: 380px; --header: 80px; --gap: 36px; } }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ui);
+    font-size: 1rem;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
   body::before {
     content: '';
     position: fixed; inset: 0;
-    background-image: linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px), linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+    background-image:
+      linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none; z-index: 0;
   }
 
-  /* ── TOPBAR ── */
+  /* ══════════════════════════════════════════════════════════════
+     TOPBAR
+  ══════════════════════════════════════════════════════════════ */
   header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(8,12,16,.93); backdrop-filter: blur(14px);
+    background: rgba(8,12,16,.95);
+    backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
-    padding: 0 32px; height: 64px;
+    padding: 0 clamp(20px, 3vw, 48px);
+    height: var(--header);
     display: flex; align-items: center; justify-content: space-between;
   }
-  .logo { display: flex; align-items: center; gap: 14px; }
-  .logo-icon { width: 36px; height: 36px; border: 2px solid var(--cyan); border-radius: 8px; display: grid; place-items: center; font-size: 18px; box-shadow: 0 0 12px rgba(0,229,255,.3); }
+
+  .logo { display: flex; align-items: center; gap: 16px; }
+  .logo-icon {
+    width: clamp(38px, 3vw, 48px);
+    height: clamp(38px, 3vw, 48px);
+    border: 2px solid var(--cyan);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: clamp(18px, 1.8vw, 24px);
+    box-shadow: 0 0 16px rgba(0,229,255,.3);
+    flex-shrink: 0;
+  }
   .logo-text { display: flex; flex-direction: column; line-height: 1; }
-  .logo-text span:first-child { font-family: var(--head); font-weight: 800; font-size: 18px; letter-spacing: 2px; color: #fff; }
-  .logo-text span:first-child em { color: var(--cyan); font-style: normal; }
-  .logo-text span:last-child { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 3px; margin-top: 3px; }
-  .header-right { display: flex; align-items: center; gap: 20px; }
-  .ws-badge { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: 2px; }
-  .ws-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: background .3s; }
-  .ws-dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.4s infinite; }
-  .ws-dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .logo-text .logo-main {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: clamp(16px, 1.4vw, 22px);
+    letter-spacing: 2px; color: #fff;
+  }
+  .logo-text .logo-main em { color: var(--cyan); font-style: normal; }
+  .logo-text .logo-sub {
+    font-family: var(--mono);
+    font-size: clamp(9px, 0.7vw, 11px);
+    color: var(--muted); letter-spacing: 3px;
+    margin-top: 4px;
+  }
+
+  .header-right { display: flex; align-items: center; gap: clamp(14px, 2vw, 28px); }
+  .ws-badge { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: clamp(10px, 0.75vw, 12px); letter-spacing: 2px; }
+  .ws-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); transition: background .3s; flex-shrink: 0; }
+  .ws-dot.connected { background: var(--green); box-shadow: 0 0 10px var(--green); animation: pulse 1.4s infinite; }
+  .ws-dot.error { background: var(--red); box-shadow: 0 0 10px var(--red); }
   #ws-label { color: var(--muted); }
   #ws-label.connected { color: var(--green); }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
-  .clock { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .clock { font-family: var(--mono); font-size: clamp(12px, 0.85vw, 15px); color: var(--muted); letter-spacing: 1px; }
 
-  /* ── LAYOUT ── */
-  .wrapper { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 28px 32px; display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
-  aside { display: flex; flex-direction: column; gap: 12px; }
-  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+  /* ══════════════════════════════════════════════════════════════
+     LAYOUT
+  ══════════════════════════════════════════════════════════════ */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 1800px; margin: 0 auto;
+    padding: var(--gap) clamp(16px, 3vw, 48px);
+    display: grid;
+    grid-template-columns: var(--sidebar) 1fr;
+    gap: var(--gap);
+    min-height: calc(100vh - var(--header));
+  }
+
+  /* ── Notebook ── */
+  @media (max-width: 1280px) {
+    :root { --sidebar: 260px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr) !important; }
+    .bottom-grid { grid-template-columns: 1fr !important; }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     SIDEBAR
+  ══════════════════════════════════════════════════════════════ */
+  aside {
+    display: flex; flex-direction: column; gap: 12px;
+    position: sticky;
+    top: calc(var(--header) + var(--gap));
+    max-height: calc(100vh - var(--header) - var(--gap) * 2);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: clamp(9px, 0.65vw, 11px);
+    letter-spacing: 3px; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 2px;
+    padding-left: 2px;
+  }
 
   /* ── SERVER CARDS ── */
-  .server-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: border-color .2s, box-shadow .2s; position: relative; overflow: hidden; }
-  .server-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--muted); transition: background .2s; }
-  .server-card.active { border-color: var(--cyan); box-shadow: 0 0 16px rgba(0,229,255,.08); }
+  .server-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(12px, 1.2vw, 18px) clamp(14px, 1.4vw, 20px);
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s, transform .15s;
+    position: relative; overflow: hidden;
+  }
+  .server-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; background: var(--muted);
+    transition: background .2s;
+  }
+  .server-card:hover { transform: translateX(2px); }
+  .server-card.active { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,229,255,.1); }
   .server-card.active::before { background: var(--cyan); }
-  .server-card.ok::before { background: var(--green); }
+  .server-card.ok::before   { background: var(--green); }
   .server-card.warn::before { background: var(--yellow); }
   .server-card.crit::before { background: var(--red); }
-  .sc-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .sc-name { font-family: var(--head); font-weight: 700; font-size: 15px; color: #e8f0f8; }
-  .sc-os { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
-  .sc-badge { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; }
+
+  .sc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .sc-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+
+  /* Logo del OS */
+  .os-logo {
+    width: clamp(28px, 2.2vw, 36px);
+    height: clamp(28px, 2.2vw, 36px);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: clamp(16px, 1.4vw, 22px);
+    flex-shrink: 0;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .os-logo img { width: 70%; height: 70%; object-fit: contain; }
+
+  .sc-info { flex: 1; min-width: 0; }
+  .sc-name {
+    font-family: var(--head); font-weight: 700;
+    font-size: clamp(13px, 1vw, 16px);
+    color: #e8f0f8;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sc-os {
+    font-family: var(--mono);
+    font-size: clamp(9px, 0.65vw, 11px);
+    color: var(--muted); margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sc-badge {
+    font-family: var(--mono); font-size: clamp(9px, 0.65vw, 11px);
+    padding: 3px 8px; border-radius: 4px; letter-spacing: 1px;
+    flex-shrink: 0;
+  }
   .badge-ok   { background: rgba(57,255,110,.12); color: var(--green); border: 1px solid rgba(57,255,110,.25); }
   .badge-warn { background: rgba(255,214,0,.12);  color: var(--yellow); border: 1px solid rgba(255,214,0,.25); }
   .badge-crit { background: rgba(255,59,92,.12);  color: var(--red);    border: 1px solid rgba(255,59,92,.25); }
+
   .sc-bar { margin-top: 10px; }
-  .bar-track { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 2px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .bar-track { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
   .fill-ok   { background: linear-gradient(90deg, var(--green), #00e676); }
   .fill-warn { background: linear-gradient(90deg, var(--yellow), #ffab00); }
   .fill-crit { background: linear-gradient(90deg, var(--red), #ff1744); }
-  .bar-pct { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 5px; display: flex; justify-content: space-between; }
+  .bar-pct {
+    font-family: var(--mono); font-size: clamp(10px, 0.7vw, 12px);
+    color: var(--muted); margin-top: 5px;
+    display: flex; justify-content: space-between;
+  }
 
-  /* ── LOADER ── */
-  .loader { text-align: center; padding: 40px 20px; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 2px; }
-  .loader::after { content: ''; display: block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; margin: 12px auto 0; animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  /* ══════════════════════════════════════════════════════════════
+     MAIN
+  ══════════════════════════════════════════════════════════════ */
+  main { display: flex; flex-direction: column; gap: var(--gap); }
 
-  /* ── MAIN ── */
-  main { display: flex; flex-direction: column; gap: 20px; }
-  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
-  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; position: relative; overflow: hidden; animation: fadeSlideIn .4s ease both; }
+  /* ── STAT CARDS ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: clamp(12px, 1.2vw, 18px); }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(18px, 1.8vw, 28px) clamp(20px, 2vw, 30px);
+    position: relative; overflow: hidden;
+    animation: fadeSlideIn .4s ease both;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
   .stat-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; }
   .stat-card.s-total::after { background: linear-gradient(90deg,var(--cyan),transparent); }
   .stat-card.s-pass::after  { background: linear-gradient(90deg,var(--green),transparent); }
   .stat-card.s-fail::after  { background: linear-gradient(90deg,var(--red),transparent); }
   .stat-card.s-warn::after  { background: linear-gradient(90deg,var(--yellow),transparent); }
-  .stat-icon { font-size: 22px; margin-bottom: 10px; }
-  .stat-val { font-family: var(--head); font-weight: 800; font-size: 34px; line-height: 1; letter-spacing: -1px; }
+
+  .stat-icon { font-size: clamp(22px, 2vw, 30px); margin-bottom: clamp(10px, 1vw, 14px); }
+  .stat-val {
+    font-family: var(--head); font-weight: 800;
+    font-size: clamp(32px, 3.5vw, 52px);
+    line-height: 1; letter-spacing: -1px;
+  }
   .s-total .stat-val { color: var(--cyan); }
   .s-pass  .stat-val { color: var(--green); }
   .s-fail  .stat-val { color: var(--red); }
   .s-warn  .stat-val { color: var(--yellow); }
-  .stat-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: clamp(9px, 0.65vw, 11px);
+    color: var(--muted); letter-spacing: 2px;
+    text-transform: uppercase; margin-top: 6px;
+  }
 
   /* ── PANEL ── */
-  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .panel-header { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-  .panel-title { font-family: var(--head); font-weight: 700; font-size: 15px; letter-spacing: 1px; color: #e8f0f8; display: flex; align-items: center; gap: 10px; }
-  .panel-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .panel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-header {
+    padding: clamp(14px, 1.4vw, 20px) clamp(18px, 1.8vw, 28px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .panel-title {
+    font-family: var(--head); font-weight: 700;
+    font-size: clamp(14px, 1.1vw, 17px);
+    letter-spacing: 1px; color: #e8f0f8;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .panel-title .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); flex-shrink: 0; }
   .btn-group { display: flex; gap: 8px; }
-  .btn { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 7px 14px; border-radius: 6px; cursor: pointer; border: 1px solid; transition: all .2s; }
-  .btn-cyan { border-color: var(--cyan2); color: var(--cyan); background: rgba(0,229,255,.06); }
-  .btn-cyan:hover { background: rgba(0,229,255,.15); box-shadow: 0 0 12px rgba(0,229,255,.2); }
+  .btn {
+    font-family: var(--mono);
+    font-size: clamp(10px, 0.7vw, 12px);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: clamp(6px, 0.6vw, 9px) clamp(12px, 1.2vw, 18px);
+    border-radius: 6px; cursor: pointer; border: 1px solid; transition: all .2s;
+  }
+  .btn-cyan  { border-color: var(--cyan2); color: var(--cyan); background: rgba(0,229,255,.06); }
+  .btn-cyan:hover  { background: rgba(0,229,255,.15); box-shadow: 0 0 14px rgba(0,229,255,.2); }
   .btn-green { border-color: rgba(57,255,110,.4); color: var(--green); background: rgba(57,255,110,.06); }
   .btn-green:hover { background: rgba(57,255,110,.15); }
 
   /* ── CHECK TABLE ── */
-  .check-table { width: 100%; border-collapse: collapse; }
-  .check-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: 12px 22px; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg3); }
-  .check-table td { padding: 12px 22px; border-bottom: 1px solid rgba(30,45,61,.6); font-size: 14px; }
+  .table-wrap { overflow-x: auto; }
+  .check-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+  .check-table th {
+    font-family: var(--mono); font-size: clamp(9px, 0.65vw, 11px);
+    letter-spacing: 2px; color: var(--muted); text-transform: uppercase;
+    padding: clamp(10px, 1vw, 14px) clamp(16px, 1.6vw, 24px);
+    text-align: left; border-bottom: 1px solid var(--border); background: var(--bg3);
+    white-space: nowrap;
+  }
+  .check-table td {
+    padding: clamp(11px, 1.1vw, 15px) clamp(16px, 1.6vw, 24px);
+    border-bottom: 1px solid rgba(30,45,61,.6);
+    font-size: clamp(13px, 0.95vw, 15px);
+    vertical-align: middle;
+  }
   .check-table tr:last-child td { border-bottom: none; }
   .check-table tr:hover td { background: rgba(0,229,255,.025); }
-  .cat-tag { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase; }
-  .cat-SSH       { background: rgba(0,229,255,.1); color: var(--cyan); border: 1px solid rgba(0,229,255,.2); }
-  .cat-Firewall  { background: rgba(57,255,110,.08); color: #5dff8e; border: 1px solid rgba(57,255,110,.18); }
-  .cat-Usuarios  { background: rgba(255,214,0,.08); color: var(--yellow); border: 1px solid rgba(255,214,0,.18); }
-  .cat-Sistema   { background: rgba(179,136,255,.1); color: #c9a0ff; border: 1px solid rgba(179,136,255,.2); }
-  .cat-Auditoría { background: rgba(255,111,0,.1); color: #ff9040; border: 1px solid rgba(255,111,0,.2); }
-  .cat-Red       { background: rgba(0,200,255,.08); color: #00c8ff; border: 1px solid rgba(0,200,255,.18); }
-  .cat-Servicios { background: rgba(255,59,92,.08); color: #ff6b85; border: 1px solid rgba(255,59,92,.18); }
-  .cat-default   { background: rgba(100,100,100,.1); color: #aaa; border: 1px solid rgba(100,100,100,.2); }
-  .cat-Contraseñas { background: rgba(255,214,0,.08); color: var(--yellow); border: 1px solid rgba(255,214,0,.18); }
-  .cat-RDP       { background: rgba(0,229,255,.08); color: var(--cyan); border: 1px solid rgba(0,229,255,.18); }
-  .cat-SMB       { background: rgba(255,111,0,.1); color: #ff9040; border: 1px solid rgba(255,111,0,.2); }
-  .cat-Antivirus { background: rgba(57,255,110,.08); color: var(--green); border: 1px solid rgba(57,255,110,.18); }
+
+  .cat-tag {
+    font-family: var(--mono); font-size: clamp(9px, 0.65vw, 11px);
+    padding: 3px 9px; border-radius: 4px; letter-spacing: 1px; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .cat-SSH          { background: rgba(0,229,255,.1); color: var(--cyan); border: 1px solid rgba(0,229,255,.2); }
+  .cat-Firewall     { background: rgba(57,255,110,.08); color: #5dff8e; border: 1px solid rgba(57,255,110,.18); }
+  .cat-Usuarios     { background: rgba(255,214,0,.08); color: var(--yellow); border: 1px solid rgba(255,214,0,.18); }
+  .cat-Sistema      { background: rgba(179,136,255,.1); color: #c9a0ff; border: 1px solid rgba(179,136,255,.2); }
+  .cat-Auditoría    { background: rgba(255,111,0,.1); color: #ff9040; border: 1px solid rgba(255,111,0,.2); }
+  .cat-Red          { background: rgba(0,200,255,.08); color: #00c8ff; border: 1px solid rgba(0,200,255,.18); }
+  .cat-Servicios    { background: rgba(255,59,92,.08); color: #ff6b85; border: 1px solid rgba(255,59,92,.18); }
+  .cat-Contraseñas  { background: rgba(255,214,0,.08); color: var(--yellow); border: 1px solid rgba(255,214,0,.18); }
+  .cat-RDP          { background: rgba(0,229,255,.08); color: var(--cyan); border: 1px solid rgba(0,229,255,.18); }
+  .cat-SMB          { background: rgba(255,111,0,.1); color: #ff9040; border: 1px solid rgba(255,111,0,.2); }
+  .cat-Antivirus    { background: rgba(57,255,110,.08); color: var(--green); border: 1px solid rgba(57,255,110,.18); }
   .cat-Actualizaciones { background: rgba(179,136,255,.1); color: #c9a0ff; border: 1px solid rgba(179,136,255,.2); }
-  .severity { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px; letter-spacing: 1px; }
+
+  .severity {
+    font-family: var(--mono); font-size: clamp(9px, 0.65vw, 11px);
+    padding: 3px 8px; border-radius: 3px; letter-spacing: 1px; white-space: nowrap;
+  }
   .sev-ALTA  { background: rgba(255,59,92,.12); color: var(--red); border: 1px solid rgba(255,59,92,.25); }
   .sev-MEDIA { background: rgba(255,214,0,.1); color: var(--yellow); border: 1px solid rgba(255,214,0,.2); }
   .sev-BAJA  { background: rgba(57,255,110,.08); color: var(--green); border: 1px solid rgba(57,255,110,.2); }
-  .check-name { font-weight: 600; color: #d0dce8; }
-  .check-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .check-name { font-weight: 600; color: #d0dce8; font-size: clamp(13px, 0.95vw, 15px); }
+  .check-desc { font-size: clamp(11px, 0.75vw, 13px); color: var(--muted); margin-top: 3px; }
+  .check-detail { font-family: var(--mono); font-size: clamp(10px, 0.7vw, 12px); color: var(--muted); }
 
   /* ── BOTTOM GRID ── */
-  .bottom-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
-  .cat-list { display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; }
+  .bottom-grid { display: grid; grid-template-columns: 1fr 360px; gap: var(--gap); }
+  .cat-list { display: flex; flex-direction: column; gap: clamp(10px, 1vw, 14px); padding: clamp(16px, 1.6vw, 24px) clamp(18px, 1.8vw, 26px); }
   .cat-row { display: flex; align-items: center; gap: 14px; }
-  .cat-name { font-family: var(--ui); font-weight: 600; font-size: 13px; color: var(--text); width: 120px; flex-shrink: 0; }
-  .cat-bar  { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-  .cat-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
-  .cat-pct { font-family: var(--mono); font-size: 12px; width: 38px; text-align: right; }
+  .cat-name { font-family: var(--ui); font-weight: 600; font-size: clamp(12px, 0.9vw, 14px); color: var(--text); width: 130px; flex-shrink: 0; }
+  .cat-bar  { flex: 1; height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .cat-pct { font-family: var(--mono); font-size: clamp(11px, 0.8vw, 13px); width: 42px; text-align: right; }
 
   /* ── SCORE RING ── */
-  .score-ring { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 6px; }
-  .ring-wrap { position: relative; width: 120px; height: 120px; }
-  .ring-wrap svg { transform: rotate(-90deg); }
+  .score-ring {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: clamp(20px, 2vw, 32px); gap: 8px;
+  }
+  .ring-wrap {
+    position: relative;
+    width: clamp(130px, 11vw, 160px);
+    height: clamp(130px, 11vw, 160px);
+  }
+  .ring-wrap svg { transform: rotate(-90deg); width: 100%; height: 100%; }
   .ring-bg   { fill: none; stroke: var(--bg3); stroke-width: 10; }
-  .ring-fill { fill: none; stroke: var(--cyan); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 345; stroke-dashoffset: 345; filter: drop-shadow(0 0 6px var(--cyan)); transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1), stroke .4s; }
+  .ring-fill {
+    fill: none; stroke: var(--cyan); stroke-width: 10; stroke-linecap: round;
+    stroke-dasharray: 345; stroke-dashoffset: 345;
+    filter: drop-shadow(0 0 8px var(--cyan));
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1), stroke .4s;
+  }
   .ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .ring-pct  { font-family: var(--head); font-weight: 800; font-size: 28px; color: var(--cyan); transition: color .4s; }
-  .ring-sub  { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 1px; }
-  .ring-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+  .ring-pct  { font-family: var(--head); font-weight: 800; font-size: clamp(26px, 2.5vw, 36px); color: var(--cyan); transition: color .4s; }
+  .ring-sub  { font-family: var(--mono); font-size: clamp(9px, 0.65vw, 11px); color: var(--muted); letter-spacing: 1px; }
+  .ring-title { font-family: var(--mono); font-size: clamp(10px, 0.7vw, 12px); color: var(--muted); letter-spacing: 2px; }
 
   /* ── EVENTS ── */
-  .event-list { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
-  .event-item { display: flex; gap: 12px; align-items: flex-start; padding: 9px 11px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--border); animation: fadeSlideIn .3s ease; }
-  .event-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-  .event-text { font-size: 13px; color: var(--text); line-height: 1.4; }
-  .event-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .event-list {
+    padding: clamp(12px, 1.2vw, 18px);
+    display: flex; flex-direction: column; gap: 8px;
+    max-height: 260px; overflow-y: auto;
+  }
+  .event-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: clamp(9px, 0.9vw, 12px) clamp(11px, 1.1vw, 14px);
+    background: var(--bg3); border-radius: 8px;
+    border: 1px solid var(--border);
+    animation: fadeSlideIn .3s ease;
+  }
+  .event-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .event-text { font-size: clamp(12px, 0.85vw, 14px); color: var(--text); line-height: 1.4; }
+  .event-time { font-family: var(--mono); font-size: clamp(9px, 0.65vw, 11px); color: var(--muted); margin-top: 2px; }
 
-  /* ── EMPTY STATE ── */
-  .empty-state { text-align: center; padding: 50px 20px; font-family: var(--mono); color: var(--muted); font-size: 12px; letter-spacing: 2px; }
-  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  /* ── LOADER / EMPTY ── */
+  .loader { text-align: center; padding: 50px 20px; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 2px; }
+  .loader::after { content: ''; display: block; width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; margin: 14px auto 0; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .empty-state { text-align: center; padding: clamp(40px, 4vw, 60px) 20px; font-family: var(--mono); color: var(--muted); font-size: clamp(11px, 0.8vw, 13px); letter-spacing: 2px; }
+  .empty-icon { font-size: clamp(32px, 3vw, 44px); margin-bottom: 14px; }
 
   /* ── TOAST ── */
-  #toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
-  .toast-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; box-shadow: 0 4px 20px rgba(0,0,0,.4); animation: fadeSlideIn .3s ease; max-width: 320px; }
+  #toast { position: fixed; bottom: 28px; right: 28px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast-item {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 13px 20px;
+    font-family: var(--mono); font-size: clamp(11px, 0.8vw, 13px);
+    letter-spacing: 1px; box-shadow: 0 4px 24px rgba(0,0,0,.5);
+    animation: fadeSlideIn .3s ease; max-width: 340px;
+  }
   .toast-item.ok   { border-left: 3px solid var(--green); color: var(--green); }
   .toast-item.warn { border-left: 3px solid var(--yellow); color: var(--yellow); }
   .toast-item.crit { border-left: 3px solid var(--red); color: var(--red); }
@@ -189,7 +408,13 @@
   ::-webkit-scrollbar-track { background: var(--bg2); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-  footer { position: relative; z-index: 1; text-align: center; padding: 18px; font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; border-top: 1px solid var(--border); }
+  footer {
+    position: relative; z-index: 1; text-align: center;
+    padding: clamp(14px, 1.4vw, 20px);
+    font-family: var(--mono); font-size: clamp(9px, 0.65vw, 11px);
+    color: var(--muted); letter-spacing: 2px;
+    border-top: 1px solid var(--border);
+  }
 </style>
 </head>
 <body>
@@ -199,8 +424,8 @@
   <div class="logo">
     <div class="logo-icon">🛡️</div>
     <div class="logo-text">
-      <span>Server<em>Harden</em>Pro</span>
-      <span>// SECURITY AUDIT PLATFORM</span>
+      <span class="logo-main">Server<em>Harden</em>Pro</span>
+      <span class="logo-sub">// SECURITY AUDIT PLATFORM</span>
     </div>
   </div>
   <div class="header-right">
@@ -260,7 +485,7 @@
           <button class="btn btn-green" onclick="exportExcel()">⬇ Excel</button>
         </div>
       </div>
-      <div id="checks-container">
+      <div class="table-wrap" id="checks-container">
         <div class="empty-state">
           <div class="empty-icon">🔍</div>
           SELECCIONÁ UN SERVIDOR PARA VER LA AUDITORÍA
@@ -277,7 +502,7 @@
           <div class="panel-title"><div class="dot"></div>Cumplimiento por Categoría</div>
         </div>
         <div class="cat-list" id="cat-list">
-          <div class="empty-state" style="padding:20px">
+          <div class="empty-state" style="padding:24px">
             <div class="empty-icon">📊</div>
           </div>
         </div>
@@ -292,7 +517,7 @@
           </div>
           <div class="score-ring">
             <div class="ring-wrap">
-              <svg width="120" height="120" viewBox="0 0 120 120">
+              <svg viewBox="0 0 120 120">
                 <circle class="ring-bg" cx="60" cy="60" r="55"/>
                 <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="55"/>
               </svg>
@@ -331,13 +556,10 @@
 
 <script>
 // ══════════════════════════════════════════════════════════════════
-//  CONFIG — cambiá la URL si el backend corre en otro host/puerto
+//  CONFIG
 // ══════════════════════════════════════════════════════════════════
-const API  = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000'
-  : `http://${window.location.hostname}:8000`;
-
-const WS_URL = API.replace('http', 'ws') + '/ws';
+const API    = `http://${window.location.hostname}:8010`;
+const WS_URL = `ws://${window.location.hostname}:8010/ws`;
 
 let currentServer = null;
 let ws = null;
@@ -348,7 +570,44 @@ setInterval(() => {
     new Date().toLocaleTimeString('es-AR', { hour12: false });
 }, 1000);
 
-// ── Toast ─────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  LOGOS POR DISTRO / OS
+// ══════════════════════════════════════════════════════════════════
+function getOsLogo(os = '', platform = 'linux') {
+  const o = os.toLowerCase();
+
+  // Logos SVG inline o URLs de CDN confiables
+  const logos = {
+    ubuntu:   'https://assets.ubuntu.com/v1/29985a98-ubuntu-logo32.png',
+    debian:   'https://www.debian.org/logos/openlogo-nd-50.png',
+    centos:   'https://wiki.centos.org/ArtWork/Brand/Logo?action=AttachFile&do=get&target=centos-logo-light.png',
+    fedora:   'https://fedoraproject.org/w/uploads/2/2d/Logo_fedoraicon.png',
+    rocky:    'https://rockylinux.org/icons/icon-512x512.png',
+    alma:     'https://almalinux.org/images/almalinux-logo-icon.png',
+    arch:     'https://archlinux.org/static/favicon.png',
+    mint:     'https://linuxmint.com/web/img/favicon.ico',
+    zorin:    'https://zorin.com/media/zorin-os-icon.png',
+    kali:     'https://www.kali.org/images/kali-dragon-icon.svg',
+    parrot:   'https://www.parrotsec.org/images/favicon.png',
+    windows:  'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Windows_logo_-_2012.svg/64px-Windows_logo_-_2012.svg.png',
+    macos:    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/MacOS_wordmark_%282017%29.svg/64px-MacOS_wordmark_%282017%29.svg.png',
+  };
+
+  // Detectar por string del OS
+  for (const [key, url] of Object.entries(logos)) {
+    if (o.includes(key)) {
+      return `<img src="${url}" alt="${key}" onerror="this.parentElement.innerHTML='${platform === 'windows' ? '🪟' : '🐧'}'"/>`;
+    }
+  }
+
+  // Fallback por plataforma
+  if (platform === 'windows') return '🪟';
+  return '🐧';
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════════════
 function toast(msg, type = 'info', duration = 4000) {
   const t = document.createElement('div');
   t.className = `toast-item ${type}`;
@@ -357,7 +616,9 @@ function toast(msg, type = 'info', duration = 4000) {
   setTimeout(() => t.remove(), duration);
 }
 
-// ── WebSocket ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  WEBSOCKET
+// ══════════════════════════════════════════════════════════════════
 function connectWS() {
   ws = new WebSocket(WS_URL);
 
@@ -371,18 +632,13 @@ function connectWS() {
   ws.onmessage = ({ data }) => {
     const msg = JSON.parse(data);
     if (msg.event === 'new_audit') {
-      addEvent(
-        `${msg.hostname} — Nueva auditoría · Score: ${msg.score}%`,
-        msg.status === 'OK' ? 'var(--green)' : msg.status === 'WARN' ? 'var(--yellow)' : 'var(--red)'
-      );
+      const color = msg.status === 'OK' ? 'var(--green)' : msg.status === 'WARN' ? 'var(--yellow)' : 'var(--red)';
+      addEvent(`${msg.hostname} — Nueva auditoría · Score: ${msg.score}%`, color);
       toast(`📡 ${msg.hostname} envió nueva auditoría`, msg.status.toLowerCase());
-      loadServers();
-      loadSummary();
+      loadServers(); loadSummary();
       if (currentServer === msg.hostname) loadDetail(msg.hostname);
     }
-    if (msg.event === 'connected' && msg.summary) {
-      renderSummary(msg.summary);
-    }
+    if (msg.event === 'connected' && msg.summary) renderSummary(msg.summary);
   };
 
   ws.onerror = () => {
@@ -399,22 +655,23 @@ function connectWS() {
   };
 }
 
-// ── Cargar lista de servidores ────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  SERVIDORES
+// ══════════════════════════════════════════════════════════════════
 async function loadServers() {
   try {
     const res  = await fetch(`${API}/servers`);
     const data = await res.json();
     renderServers(data.servers || []);
-  } catch (e) {
+  } catch {
     document.getElementById('server-list').innerHTML =
-      `<div class="empty-state"><div class="empty-icon">⚠️</div>No se pudo conectar al backend<br><br><small style="font-size:10px">¿Está corriendo uvicorn?</small></div>`;
+      `<div class="empty-state"><div class="empty-icon">⚠️</div>No se pudo conectar al backend<br><br><small style="font-size:10px">¿Está corriendo el contenedor?</small></div>`;
   }
 }
 
 function renderServers(servers) {
-  const label = document.getElementById('srv-label');
-  const list  = document.getElementById('server-list');
-  label.textContent = `// Servidores (${servers.length})`;
+  document.getElementById('srv-label').textContent = `// Servidores (${servers.length})`;
+  const list = document.getElementById('server-list');
 
   if (!servers.length) {
     list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>SIN SERVIDORES AÚN<br><br><small>Ejecutá un agente para ver datos aquí</small></div>`;
@@ -422,34 +679,45 @@ function renderServers(servers) {
   }
 
   list.innerHTML = servers.map(s => {
-    const cls   = s.status === 'OK' ? 'ok' : s.status === 'WARN' ? 'warn' : 'crit';
-    const badge = s.status === 'OK' ? 'badge-ok' : s.status === 'WARN' ? 'badge-warn' : 'badge-crit';
-    const fill  = `fill-${cls}`;
+    const cls    = s.status === 'OK' ? 'ok' : s.status === 'WARN' ? 'warn' : 'crit';
+    const badge  = `badge-${cls}`;
+    const fill   = `fill-${cls}`;
     const active = s.hostname === currentServer ? 'active' : '';
+    const logo   = getOsLogo(s.os, s.platform);
+    const pctColor = s.status === 'OK' ? 'var(--green)' : s.status === 'WARN' ? 'var(--yellow)' : 'var(--red)';
+
     return `
       <div class="server-card ${cls} ${active}" onclick="selectServer('${s.hostname}')">
         <div class="sc-top">
-          <div>
-            <div class="sc-name">${s.hostname}</div>
-            <div class="sc-os">${s.platform?.toUpperCase() || 'LINUX'} · ${s.os?.split(' ').slice(0,3).join(' ') || 'N/A'}</div>
+          <div class="sc-left">
+            <div class="os-logo">${logo}</div>
+            <div class="sc-info">
+              <div class="sc-name">${s.hostname}</div>
+              <div class="sc-os">${s.platform?.toUpperCase() || 'LINUX'} · ${s.os?.split(' ').slice(0,3).join(' ') || 'N/A'}</div>
+            </div>
           </div>
           <span class="sc-badge ${badge}">${s.status}</span>
         </div>
         <div class="sc-bar">
           <div class="bar-track"><div class="bar-fill ${fill}" style="width:${s.score}%"></div></div>
-          <div class="bar-pct"><span>Cumplimiento</span><span>${s.score}%</span></div>
+          <div class="bar-pct">
+            <span>Cumplimiento</span>
+            <span style="color:${pctColor};font-weight:700">${s.score}%</span>
+          </div>
         </div>
       </div>`;
   }).join('');
 }
 
-// ── Cargar resumen global ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  RESUMEN GLOBAL
+// ══════════════════════════════════════════════════════════════════
 async function loadSummary() {
   try {
     const res  = await fetch(`${API}/summary`);
     const data = await res.json();
     renderSummary(data);
-  } catch (e) {}
+  } catch {}
 }
 
 function renderSummary(data) {
@@ -458,7 +726,7 @@ function renderSummary(data) {
   document.getElementById('stat-fail').textContent    = data.checks?.fail   ?? '—';
   document.getElementById('stat-warn').textContent    = data.checks?.warn   ?? '—';
 
-  const score = data.avg_score ?? 0;
+  const score  = data.avg_score ?? 0;
   const offset = 345 - (345 * score / 100);
   document.getElementById('ring-fill').style.strokeDashoffset = offset;
   document.getElementById('ring-pct').textContent = score + '%';
@@ -468,7 +736,9 @@ function renderSummary(data) {
   document.getElementById('ring-pct').style.color   = color;
 }
 
-// ── Seleccionar servidor ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  DETALLE SERVIDOR
+// ══════════════════════════════════════════════════════════════════
 function selectServer(hostname) {
   currentServer = hostname;
   document.querySelectorAll('.server-card').forEach(c => {
@@ -477,16 +747,14 @@ function selectServer(hostname) {
   loadDetail(hostname);
 }
 
-// ── Cargar detalle de servidor ────────────────────────────────────
 async function loadDetail(hostname) {
   document.getElementById('detail-title').textContent = `${hostname} — cargando...`;
   document.getElementById('checks-container').innerHTML = '<div class="loader"></div>';
-
   try {
     const res  = await fetch(`${API}/servers/${hostname}`);
     const data = await res.json();
     renderDetail(data);
-  } catch (e) {
+  } catch {
     document.getElementById('checks-container').innerHTML =
       `<div class="empty-state"><div class="empty-icon">❌</div>Error al cargar datos</div>`;
   }
@@ -496,7 +764,6 @@ function renderDetail(data) {
   document.getElementById('detail-title').textContent =
     `${data.server.hostname} — Resultado de Auditoría`;
 
-  // Tabla de checks
   if (!data.checks?.length) {
     document.getElementById('checks-container').innerHTML =
       `<div class="empty-state"><div class="empty-icon">📭</div>SIN CHECKS DISPONIBLES</div>`;
@@ -504,18 +771,18 @@ function renderDetail(data) {
   }
 
   const rows = data.checks.map(c => {
-    const icon = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
+    const icon   = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
     const catCls = `cat-${c.category.replace(/\s/g,'')}`;
     return `
       <tr>
-        <td>${icon}</td>
+        <td style="font-size:1.2em">${icon}</td>
         <td><span class="cat-tag ${catCls}">${c.category}</span></td>
         <td>
           <div class="check-name">${c.name}</div>
           <div class="check-desc">${c.description}</div>
         </td>
         <td><span class="severity sev-${c.severity}">${c.severity}</span></td>
-        <td><span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${c.detail || ''}</span></td>
+        <td><span class="check-detail">${c.detail || ''}</span></td>
       </tr>`;
   }).join('');
 
@@ -527,28 +794,29 @@ function renderDetail(data) {
       <tbody>${rows}</tbody>
     </table>`;
 
-  // Categorías
   renderCategories(data.category_scores || {});
 }
 
 function renderCategories(cats) {
-  const list = document.getElementById('cat-list');
+  const list    = document.getElementById('cat-list');
   const entries = Object.entries(cats);
   if (!entries.length) { list.innerHTML = ''; return; }
 
   list.innerHTML = entries.map(([cat, pct]) => {
-    const cls = pct >= 80 ? 'fill-ok' : pct >= 60 ? 'fill-warn' : 'fill-crit';
+    const cls   = pct >= 80 ? 'fill-ok' : pct >= 60 ? 'fill-warn' : 'fill-crit';
     const color = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
     return `
       <div class="cat-row">
         <span class="cat-name">${cat}</span>
         <div class="cat-bar"><div class="cat-bar-fill ${cls}" style="width:${pct}%"></div></div>
-        <span class="cat-pct" style="color:${color}">${pct}%</span>
+        <span class="cat-pct" style="color:${color};font-weight:700">${pct}%</span>
       </div>`;
   }).join('');
 }
 
-// ── Agregar evento en vivo ────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  EVENTOS EN VIVO
+// ══════════════════════════════════════════════════════════════════
 function addEvent(text, color = 'var(--cyan)') {
   const list = document.getElementById('event-list');
   const now  = new Date().toLocaleTimeString('es-AR', { hour12: false });
@@ -561,11 +829,12 @@ function addEvent(text, color = 'var(--cyan)') {
       <div class="event-time">${now}</div>
     </div>`;
   list.prepend(item);
-  // Máximo 20 eventos
   while (list.children.length > 20) list.lastChild.remove();
 }
 
-// ── Exportar PDF ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  REPORTES
+// ══════════════════════════════════════════════════════════════════
 async function exportPDF() {
   if (!currentServer) { toast('Seleccioná un servidor primero', 'warn'); return; }
   toast(`Generando PDF de ${currentServer}...`, 'info');
@@ -573,16 +842,13 @@ async function exportPDF() {
     const res = await fetch(`${API}/servers/${currentServer}/report/pdf`);
     if (!res.ok) throw new Error();
     const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = `reporte_${currentServer}.pdf`; a.click();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `reporte_${currentServer}.pdf`; a.click();
     toast('PDF descargado ✓', 'ok');
-  } catch {
-    toast('El generador de PDF estará disponible con el backend corriendo', 'warn');
-  }
+  } catch { toast('Error al generar PDF', 'warn'); }
 }
 
-// ── Exportar Excel ────────────────────────────────────────────────
 async function exportExcel() {
   if (!currentServer) { toast('Seleccioná un servidor primero', 'warn'); return; }
   toast(`Generando Excel de ${currentServer}...`, 'info');
@@ -590,21 +856,20 @@ async function exportExcel() {
     const res = await fetch(`${API}/servers/${currentServer}/report/excel`);
     if (!res.ok) throw new Error();
     const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = `reporte_${currentServer}.xlsx`; a.click();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `reporte_${currentServer}.xlsx`; a.click();
     toast('Excel descargado ✓', 'ok');
-  } catch {
-    toast('El generador de Excel estará disponible con el backend corriendo', 'warn');
-  }
+  } catch { toast('Error al generar Excel', 'warn'); }
 }
 
-// ── INIT ──────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════════
 (async () => {
   connectWS();
   await loadServers();
   await loadSummary();
-  // Recargar cada 60 segundos como fallback
   setInterval(() => { loadServers(); loadSummary(); }, 60000);
 })();
 </script>
