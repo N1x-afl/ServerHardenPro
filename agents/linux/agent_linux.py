@@ -15,6 +15,16 @@ import platform
 import socket
 import datetime
 import sys
+import urllib.request
+import urllib.error
+
+# ── URL del panel — cambiá si usás otro puerto ────────────────────
+# ── URL del panel ────────────────────────────────────────────────
+# Podés configurarla de 3 formas:
+#   1. Argumento:        python3 agent_linux.py --api http://192.168.1.10:8010
+#   2. Variable de env:  export SHP_API=http://192.168.1.10:8010
+#   3. Valor por defecto: localhost (cambialo si es necesario)
+API_URL = os.environ.get("SHP_API", "http://localhost:8010/audit")
 
 # ── Colores para la terminal ──────────────────────────────────────
 class C:
@@ -421,6 +431,13 @@ def run_audit():
     os_info  = platform.platform()
     now      = datetime.datetime.now().isoformat()
 
+    # Detectar nombre de distro para el logo del panel
+    try:
+        distro_info = platform.freedesktop_os_release()
+        distro_name = distro_info.get("NAME", "") or distro_info.get("ID", "linux")
+    except Exception:
+        distro_name = platform.system()
+
     print(f"{C.CYAN}  Host   :{C.RESET} {hostname}")
     print(f"{C.CYAN}  OS     :{C.RESET} {os_info}")
     print(f"{C.CYAN}  Inicio :{C.RESET} {now}")
@@ -457,7 +474,8 @@ def run_audit():
     output = {
         "server": {
             "hostname": hostname,
-            "os": os_info,
+            "os": distro_name,
+            "os_full": os_info,
             "ip": socket.gethostbyname(hostname),
             "audit_date": now,
             "agent_version": "0.1"
@@ -477,9 +495,32 @@ def run_audit():
         json.dump(output, f, ensure_ascii=False, indent=2)
 
     print(f"  {C.GREEN}💾 Resultado guardado en:{C.RESET} {filename}")
-    print(f"{C.MUTED}  (Este archivo será enviado al panel en la Fase 4){C.RESET}\n")
+
+    # ── Envío automático al panel ─────────────────────────────────
+    send_to_panel(output)
 
     return output
+
+def send_to_panel(data: dict):
+    """Envía el resultado automáticamente al panel ServerHardenPro."""
+    print(f"\n{C.CYAN}  📡 Enviando resultado al panel...{C.RESET}")
+    print(f"  {C.MUTED}→ {API_URL}{C.RESET}")
+    try:
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        req  = urllib.request.Request(
+            API_URL,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+            print(f"  {C.GREEN}✅ Panel actualizado:{C.RESET} {result.get('message', 'OK')}\n")
+    except urllib.error.URLError as e:
+        print(f"  {C.YELLOW}⚠  No se pudo conectar al panel:{C.RESET} {e.reason}")
+        print(f"  {C.MUTED}   Verificá que el backend esté corriendo en {API_URL}{C.RESET}\n")
+    except Exception as e:
+        print(f"  {C.YELLOW}⚠  Error al enviar:{C.RESET} {e}\n")
 
 # ══════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
