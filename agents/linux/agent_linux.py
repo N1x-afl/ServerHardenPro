@@ -424,6 +424,110 @@ def print_result(check):
     print(f"  {icon}  {cat}  {name}")
     print(f"         {detail}")
 
+
+# ══════════════════════════════════════════════════════════════════
+#  INVENTARIO DE HARDWARE
+# ══════════════════════════════════════════════════════════════════
+def collect_inventory() -> dict:
+    """Recolecta información de CPU, RAM, disco, uptime y detecta si es VM."""
+    inv = {}
+
+    # ── CPU ──────────────────────────────────────────────────────
+    try:
+        cpu_model = ""
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                if "model name" in line:
+                    cpu_model = line.split(":")[1].strip()
+                    break
+        inv["cpu_model"] = cpu_model or platform.processor()
+
+        import multiprocessing
+        inv["cpu_cores"]   = multiprocessing.cpu_count()
+        inv["cpu_threads"] = inv["cpu_cores"]
+
+        try:
+            freq_line = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq").read().strip()
+            inv["cpu_freq_mhz"] = round(int(freq_line) / 1000, 1)
+        except Exception:
+            inv["cpu_freq_mhz"] = 0.0
+    except Exception:
+        inv["cpu_model"] = platform.processor()
+        inv["cpu_cores"] = 1
+        inv["cpu_threads"] = 1
+        inv["cpu_freq_mhz"] = 0.0
+
+    # ── RAM ──────────────────────────────────────────────────────
+    try:
+        meminfo = {}
+        with open("/proc/meminfo") as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 2:
+                    meminfo[parts[0].rstrip(":")] = int(parts[1])
+        total_kb   = meminfo.get("MemTotal", 0)
+        free_kb    = meminfo.get("MemAvailable", meminfo.get("MemFree", 0))
+        used_kb    = total_kb - free_kb
+        inv["ram_total_gb"] = round(total_kb / 1024 / 1024, 2)
+        inv["ram_used_gb"]  = round(used_kb  / 1024 / 1024, 2)
+        inv["ram_free_gb"]  = round(free_kb  / 1024 / 1024, 2)
+    except Exception:
+        inv["ram_total_gb"] = 0.0
+        inv["ram_used_gb"]  = 0.0
+        inv["ram_free_gb"]  = 0.0
+
+    # ── DISCO (partición raíz) ────────────────────────────────────
+    try:
+        import shutil
+        disk = shutil.disk_usage("/")
+        inv["disk_total_gb"] = round(disk.total / 1024**3, 2)
+        inv["disk_used_gb"]  = round(disk.used  / 1024**3, 2)
+        inv["disk_free_gb"]  = round(disk.free  / 1024**3, 2)
+    except Exception:
+        inv["disk_total_gb"] = 0.0
+        inv["disk_used_gb"]  = 0.0
+        inv["disk_free_gb"]  = 0.0
+
+    # ── UPTIME ───────────────────────────────────────────────────
+    try:
+        with open("/proc/uptime") as f:
+            uptime_secs = float(f.read().split()[0])
+        inv["uptime_hours"] = round(uptime_secs / 3600, 2)
+    except Exception:
+        inv["uptime_hours"] = 0.0
+
+    # ── KERNEL ───────────────────────────────────────────────────
+    inv["kernel"] = platform.release()
+
+    # ── DETECTAR VM ──────────────────────────────────────────────
+    inv["is_vm"]   = False
+    inv["vm_type"] = ""
+    try:
+        dmi = subprocess.check_output(
+            ["systemd-detect-virt", "--vm"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+        if dmi and dmi != "none":
+            inv["is_vm"]   = True
+            inv["vm_type"] = dmi.upper()
+    except Exception:
+        pass
+
+    # Fallback: revisar /proc/cpuinfo y DMI
+    if not inv["is_vm"]:
+        try:
+            cpuinfo = open("/proc/cpuinfo").read().lower()
+            for hint, name in [("vmware","VMware"),("kvm","KVM"),
+                                ("virtualbox","VirtualBox"),("xen","Xen"),
+                                ("hyperv","Hyper-V"),("qemu","QEMU")]:
+                if hint in cpuinfo:
+                    inv["is_vm"]   = True
+                    inv["vm_type"] = name
+                    break
+        except Exception:
+            pass
+
+    return inv
+
 def run_audit():
     print_banner()
 
@@ -438,8 +542,15 @@ def run_audit():
     except Exception:
         distro_name = platform.system()
 
+    # ── Inventario de hardware ───────────────────────────────────
+    inventory = collect_inventory()
+
     print(f"{C.CYAN}  Host   :{C.RESET} {hostname}")
     print(f"{C.CYAN}  OS     :{C.RESET} {os_info}")
+    print(f"{C.CYAN}  CPU    :{C.RESET} {inventory.get('cpu_model','?')} ({inventory.get('cpu_cores','?')} cores)")
+    print(f"{C.CYAN}  RAM    :{C.RESET} {inventory.get('ram_total_gb',0):.1f} GB total / {inventory.get('ram_free_gb',0):.1f} GB libre")
+    print(f"{C.CYAN}  Disco  :{C.RESET} {inventory.get('disk_total_gb',0):.0f} GB total / {inventory.get('disk_free_gb',0):.0f} GB libre")
+    print(f"{C.CYAN}  VM     :{C.RESET} {'Sí — ' + inventory.get('vm_type','') if inventory.get('is_vm') else 'No (Físico)'}")
     print(f"{C.CYAN}  Inicio :{C.RESET} {now}")
     print(f"\n{C.MUTED}  {'─'*60}{C.RESET}\n")
 
@@ -487,7 +598,8 @@ def run_audit():
             "warn": totals["WARN"],
             "score_percent": score
         },
-        "checks": results
+        "checks": results,
+        "inventory": inventory
     }
 
     filename = f"resultado_{hostname}.json"
