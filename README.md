@@ -56,7 +56,7 @@ ServerHardenPro/
 
 ```bash
 # 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/ServerHardenPro.git
+git clone https://github.com/N1x-afl/ServerHardenPro.git
 cd ServerHardenPro
 
 # 2. Levantar el backend + panel
