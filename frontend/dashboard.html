@@ -416,6 +416,78 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
 .vm-yes { background: rgba(0,229,255,.1); color: var(--cyan); border: 1px solid rgba(0,229,255,.2); }
 .vm-no  { background: rgba(57,255,110,.08); color: var(--green); border: 1px solid rgba(57,255,110,.18); }
 
+
+/* ══ LOGS TAB ═══════════════════════════════════════════════════ */
+.logs-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; padding: 20px 22px 0; }
+@media (max-width: 1100px) { .logs-grid { grid-template-columns: repeat(3,1fr); } }
+.log-stat {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px; text-align: center;
+}
+.log-stat-val  { font-family: var(--head); font-weight: 800; font-size: 32px; line-height: 1; }
+.log-stat-lbl  { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-top: 6px; }
+.log-stat.ls-fail  .log-stat-val { color: var(--red); }
+.log-stat.ls-ok    .log-stat-val { color: var(--green); }
+.log-stat.ls-brute .log-stat-val { color: var(--red); }
+.log-stat.ls-err   .log-stat-val { color: var(--yellow); }
+.log-stat.ls-crit  .log-stat-val { color: var(--red); }
+
+.log-section { padding: 18px 22px; }
+.log-section-title {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.log-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.log-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 0 22px 18px; }
+@media (max-width: 900px) { .log-two-col { grid-template-columns: 1fr; } }
+
+/* IP table */
+.ip-table { width: 100%; border-collapse: collapse; }
+.ip-table th { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.ip-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.ip-table tr:last-child td { border-bottom: none; }
+.ip-table tr:hover td { background: rgba(255,59,92,.04); }
+.ip-bar-cell { width: 80px; }
+.ip-mini-bar { height: 5px; background: var(--bg); border-radius: 3px; overflow:hidden; }
+.ip-mini-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg,var(--red),#ff6b6b); }
+.ip-count { font-family: var(--mono); font-size: 12px; color: var(--red); font-weight: 700; }
+.user-count { font-family: var(--mono); font-size: 12px; color: var(--yellow); font-weight: 700; }
+
+/* Brute force alerts */
+.brute-alert {
+  background: rgba(255,59,92,.08); border: 1px solid rgba(255,59,92,.3);
+  border-left: 3px solid var(--red); border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 8px; animation: fadeSlideIn .3s ease;
+}
+.brute-alert-top { display: flex; align-items: center; justify-content: space-between; }
+.brute-ip { font-family: var(--mono); font-size: 13px; color: var(--red); font-weight: 700; }
+.brute-badge { font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; background: rgba(255,59,92,.15); color: var(--red); border: 1px solid rgba(255,59,92,.3); }
+.brute-detail { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+/* Syslog errors */
+.syslog-item {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 14px; margin-bottom: 6px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.5;
+  transition: border-color .15s;
+}
+.syslog-item:hover { border-color: var(--yellow); }
+.syslog-item.level-CRIT   { border-left: 3px solid var(--red); }
+.syslog-item.level-ALERT  { border-left: 3px solid var(--red); }
+.syslog-item.level-ERROR  { border-left: 3px solid var(--yellow); }
+.syslog-item.level-FAIL   { border-left: 3px solid var(--yellow); }
+.syslog-ts  { color: var(--muted); font-size: 10px; margin-bottom: 3px; }
+.syslog-msg { color: var(--text); word-break: break-all; }
+.syslog-lvl { display:inline-block; font-size:10px; padding:2px 7px; border-radius:3px; margin-right:6px; }
+.syslog-lvl.level-CRIT  { background:rgba(255,59,92,.15);  color:var(--red); }
+.syslog-lvl.level-ALERT { background:rgba(255,59,92,.15);  color:var(--red); }
+.syslog-lvl.level-ERROR { background:rgba(255,214,0,.12);  color:var(--yellow); }
+.syslog-lvl.level-FAIL  { background:rgba(255,214,0,.12);  color:var(--yellow); }
+.log-period { font-family:var(--mono); font-size:10px; color:var(--muted); padding: 10px 22px 0; letter-spacing:1px; }
+.log-no-data { text-align:center; padding:30px; font-family:var(--mono); font-size:12px; color:var(--muted); }
+
 </style>
 </head>
 <body>
@@ -581,6 +653,7 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
           <button class="tab-btn" onclick="switchTab('history')" id="tab-history">📋 HISTORIAL</button>
           <button class="tab-btn" onclick="switchTab('chart')" id="tab-chart">📈 EVOLUCIÓN</button>
           <button class="tab-btn" onclick="switchTab('inventory')" id="tab-inventory">🖥️ INVENTARIO</button>
+          <button class="tab-btn" onclick="switchTab('logs')" id="tab-logs">🔴 LOGS</button>
         </div>
       </div>
 
@@ -614,6 +687,16 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
         </div>
       </div>
 
+
+      <!-- TAB: LOGS -->
+      <div class="tab-pane" id="pane-logs">
+        <div id="logs-container">
+          <div class="empty-state">
+            <div class="empty-icon">🔴</div>
+            SELECCIONÁ UN SERVIDOR PARA VER LOS LOGS
+          </div>
+        </div>
+      </div>
       <!-- TAB: EVOLUCIÓN -->
       <div class="tab-pane" id="pane-chart">
         <div class="chart-wrap">
@@ -674,7 +757,7 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
       </div>
     </div>
 
-    <footer>// ServerHardenPro v0.3 — FastAPI + SQLite + WebSockets + Chart.js</footer>
+    <footer>// ServerHardenPro v0.4 — FastAPI + SQLite + WebSockets + Chart.js</footer>
   </div>
 </div>
 
@@ -787,13 +870,14 @@ function getOsLogo(os = '', platform = '') {
 //  TABS
 // ══════════════════════════════════════════════════════════════════
 function switchTab(tab) {
-  ['checks','history','chart','inventory'].forEach(t => {
+  ['checks','history','chart','inventory','logs'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`pane-${t}`).classList.toggle('active', t === tab);
   });
   if (tab === 'history'   && currentServer) loadHistory(currentServer);
   if (tab === 'chart'     && currentServer) loadChart(currentServer);
   if (tab === 'inventory' && currentServer) loadInventory(currentServer);
+  if (tab === 'logs'      && currentServer) loadLogs(currentServer);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -839,6 +923,18 @@ function connectWS() {
   };
   ws.onmessage = ({ data }) => {
     const msg = JSON.parse(data);
+    if (msg.event === 'new_logs') {
+      const color = msg.alert ? 'var(--red)' : 'var(--cyan)';
+      const txt = msg.alert
+        ? `🚨 ${msg.hostname} — Fuerza bruta detectada! (${msg.auth_fail} fallos)`
+        : `📋 ${msg.hostname} — Logs actualizados (${msg.auth_fail} fallos)`;
+      addEvent(txt, color);
+      if (msg.alert) toast(`🚨 Fuerza bruta en ${msg.hostname}!`, 'crit', 8000);
+      if (currentServer === msg.hostname) {
+        const activeTab = document.querySelector('.tab-btn.active')?.id?.replace('tab-','');
+        if (activeTab === 'logs') loadLogs(msg.hostname);
+      }
+    }
     if (msg.event === 'new_audit') {
       const color = msg.status === 'OK' ? 'var(--green)' : msg.status === 'WARN' ? 'var(--yellow)' : 'var(--red)';
       addEvent(`${msg.hostname} — Score: ${msg.score}%`, color);
@@ -965,6 +1061,7 @@ function selectServer(hostname) {
   if (activeTab === 'history')   loadHistory(hostname);
   if (activeTab === 'chart')     loadChart(hostname);
   if (activeTab === 'inventory') loadInventory(hostname);
+  if (activeTab === 'logs')      loadLogs(hostname);
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1170,6 +1267,158 @@ async function exportExcel() {
     a.download = `reporte_${currentServer}.xlsx`; a.click();
     toast('Excel descargado ✓', 'ok');
   } catch { toast('Error al generar Excel', 'warn'); }
+}
+
+
+// ══════════════════════════════════════════════════════════════════
+//  LOGS
+// ══════════════════════════════════════════════════════════════════
+async function loadLogs(hostname) {
+  document.getElementById('logs-container').innerHTML = '<div class="loader"></div>';
+  try {
+    const res  = await fetch(`${API}/servers/${hostname}/logs`);
+    const json = await res.json();
+    if (!json.data) {
+      document.getElementById('logs-container').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          SIN DATOS DE LOGS AÚN<br><br>
+          <small style="font-family:var(--mono);font-size:10px;color:var(--muted)">
+            Volvé a correr el agente actualizado para ver los logs</small>
+        </div>`;
+      return;
+    }
+    renderLogs(json.data, hostname);
+  } catch {
+    document.getElementById('logs-container').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">❌</div>Error al cargar logs</div>`;
+  }
+}
+
+function renderLogs(data, hostname) {
+  const s   = data.summary || {};
+  const ips  = data.top_ips    || [];
+  const users= data.top_users  || [];
+  const brute= data.brute_events || [];
+  const errs = data.syslog_errors || [];
+  const date = new Date(data.analyzed_at||'').toLocaleString('es-AR');
+  const maxIp = ips[0]?.attempts || 1;
+  const maxUser = users[0]?.attempts || 1;
+
+  // ── Stats row ──
+  const statsHtml = `
+    <div class="logs-grid">
+      <div class="log-stat ls-fail">
+        <div class="log-stat-val">${s.auth_fail_total||0}</div>
+        <div class="log-stat-lbl">Auth Fallidos</div>
+      </div>
+      <div class="log-stat ls-ok">
+        <div class="log-stat-val">${s.auth_ok_total||0}</div>
+        <div class="log-stat-lbl">Auth Exitosos</div>
+      </div>
+      <div class="log-stat ls-brute" style="${brute.length?'border-color:var(--red);box-shadow:0 0 18px rgba(255,59,92,.15)':''}">
+        <div class="log-stat-val">${s.brute_force_count||0}</div>
+        <div class="log-stat-lbl">Fuerza Bruta</div>
+      </div>
+      <div class="log-stat ls-err">
+        <div class="log-stat-val">${s.syslog_error_count||0}</div>
+        <div class="log-stat-lbl">Errores Sys</div>
+      </div>
+      <div class="log-stat ls-crit">
+        <div class="log-stat-val">${s.syslog_crit_count||0}</div>
+        <div class="log-stat-lbl">Críticos Sys</div>
+      </div>
+    </div>
+    <p class="log-period">📅 Análisis: ${date} · Período: últimas ${data.period_hours}hs</p>`;
+
+  // ── Brute force alerts ──
+  let bruteHtml = '';
+  if (brute.length) {
+    bruteHtml = brute.map(b => `
+      <div class="brute-alert">
+        <div class="brute-alert-top">
+          <span class="brute-ip">🚨 ${b.ip}</span>
+          <span class="brute-badge">${b.attempts} intentos / ${b.window_min} min</span>
+        </div>
+        <div class="brute-detail">Primer intento: ${new Date(b.first_seen).toLocaleString('es-AR')}</div>
+      </div>`).join('');
+  } else {
+    bruteHtml = `<div class="log-no-data" style="color:var(--green)">✅ Sin eventos de fuerza bruta detectados</div>`;
+  }
+
+  // ── Top IPs table ──
+  const ipsHtml = ips.length ? `
+    <table class="ip-table">
+      <thead><tr><th>#</th><th>IP Origen</th><th>Intentos</th><th>Barra</th></tr></thead>
+      <tbody>${ips.map((ip,i) => `
+        <tr>
+          <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${i+1}</td>
+          <td style="font-family:var(--mono);font-size:12px">${ip.ip}</td>
+          <td class="ip-count">${ip.attempts}</td>
+          <td class="ip-bar-cell">
+            <div class="ip-mini-bar">
+              <div class="ip-mini-fill" style="width:${Math.round((ip.attempts/maxIp)*100)}%"></div>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<div class="log-no-data">Sin IPs atacantes registradas</div>`;
+
+  // ── Top usuarios atacados ──
+  const usersHtml = users.length ? `
+    <table class="ip-table">
+      <thead><tr><th>#</th><th>Usuario</th><th>Intentos</th><th>Barra</th></tr></thead>
+      <tbody>${users.map((u,i) => `
+        <tr>
+          <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${i+1}</td>
+          <td style="font-family:var(--mono);font-size:12px">${u.user}</td>
+          <td class="user-count">${u.attempts}</td>
+          <td class="ip-bar-cell">
+            <div class="ip-mini-bar">
+              <div class="ip-mini-fill" style="width:${Math.round((u.attempts/maxUser)*100)}%;background:linear-gradient(90deg,var(--yellow),#ffab00)"></div>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : `<div class="log-no-data">Sin usuarios atacados registrados</div>`;
+
+  // ── Syslog errors ──
+  const sysHtml = errs.length ? errs.slice(0,30).map(e => `
+    <div class="syslog-item level-${e.level}">
+      <div class="syslog-ts">${new Date(e.timestamp).toLocaleString('es-AR')}</div>
+      <div class="syslog-msg">
+        <span class="syslog-lvl level-${e.level}">${e.level}</span>${e.message}
+      </div>
+    </div>`).join('') : `<div class="log-no-data" style="color:var(--green)">✅ Sin errores críticos en syslog</div>`;
+
+  document.getElementById('logs-container').innerHTML = `
+    ${statsHtml}
+
+    ${brute.length ? `
+    <div class="log-section">
+      <div class="log-section-title">🚨 Alertas de Fuerza Bruta</div>
+      ${bruteHtml}
+    </div>` : ''}
+
+    <div class="log-two-col">
+      <div>
+        <div class="log-section-title" style="font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">
+          🌐 Top IPs Atacantes
+        </div>
+        ${ipsHtml}
+      </div>
+      <div>
+        <div class="log-section-title" style="font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">
+          👤 Usuarios más Atacados
+        </div>
+        ${usersHtml}
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-section-title">⚠️ Errores del Sistema (syslog)</div>
+      <div style="max-height:300px;overflow-y:auto">${sysHtml}</div>
+    </div>`;
 }
 
 // ══════════════════════════════════════════════════════════════════

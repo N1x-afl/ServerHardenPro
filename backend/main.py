@@ -24,7 +24,8 @@ from database import (
     get_server_detail, get_audit_history,
     get_global_summary,
     create_user, verify_user, get_user_by_id,
-    list_users, users_exist
+    list_users, users_exist,
+    save_log_analysis, get_log_analysis, get_log_history
 )
 
 # ══════════════════════════════════════════════════════════════════
@@ -135,6 +136,15 @@ class ServerInfo(BaseModel):
     audit_date: str; agent_version: str
     platform: Optional[str] = "linux"
     os_full: Optional[str] = ""
+
+class LogAnalysisRequest(BaseModel):
+    hostname: str
+    period_hours: Optional[int] = 24
+    summary: dict
+    top_ips: Optional[list] = []
+    top_users: Optional[list] = []
+    brute_events: Optional[list] = []
+    syslog_errors: Optional[list] = []
 
 class AuditResult(BaseModel):
     server: ServerInfo
@@ -275,6 +285,39 @@ async def report_excel(hostname: str, admin = Depends(require_admin)):
     return Response(content=xlsx_bytes,
                     media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+
+# ── POST /logs — recibe análisis de logs del agente ──────────────
+@app.post("/logs", summary="Recibir análisis de logs")
+async def receive_logs(req: LogAnalysisRequest):
+    try:
+        save_log_analysis(req.hostname, req.dict())
+        # Notificar panel en tiempo real
+        bf = req.summary.get("brute_force_count", 0)
+        await manager.broadcast({
+            "event":    "new_logs",
+            "hostname": req.hostname,
+            "brute_force": bf,
+            "auth_fail":   req.summary.get("auth_fail_total", 0),
+            "alert":    bf > 0,
+            "timestamp": datetime.datetime.now().isoformat()
+        })
+        return {"ok": True, "message": f"Logs de {req.hostname} guardados"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ── GET /servers/{hostname}/logs ──────────────────────────────────
+@app.get("/servers/{hostname}/logs", summary="Análisis de logs de un servidor")
+async def server_logs(hostname: str, user = Depends(get_current_user)):
+    data = get_log_analysis(hostname)
+    if not data:
+        return {"hostname": hostname, "data": None, "message": "Sin datos de logs aún"}
+    return {"hostname": hostname, "data": data}
+
+# ── GET /servers/{hostname}/logs/history ─────────────────────────
+@app.get("/servers/{hostname}/logs/history", summary="Historial de logs")
+async def server_logs_history(hostname: str, limit: int = 14,
+                               user = Depends(get_current_user)):
+    return {"hostname": hostname, "history": get_log_history(hostname, limit)}
 
 # ── WebSocket ─────────────────────────────────────────────────────
 @app.websocket("/ws")

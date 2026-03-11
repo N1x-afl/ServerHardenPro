@@ -611,7 +611,215 @@ def run_audit():
     # ── Envío automático al panel ─────────────────────────────────
     send_to_panel(output)
 
+    # ── Análisis de logs ──────────────────────────────────────────
+    log_data = analyze_logs(hostname)
+    send_logs_to_panel(log_data)
+
     return output
+
+
+# ══════════════════════════════════════════════════════════════════
+#  ANÁLISIS DE LOGS
+# ══════════════════════════════════════════════════════════════════
+def analyze_logs(hostname: str, period_hours: int = 24) -> dict:
+    """Analiza auth.log y syslog buscando patrones de ataque y errores."""
+    import re
+    from collections import defaultdict
+    from datetime import datetime, timedelta
+
+    print(f"\n{C.CYAN}  📋 Analizando logs (últimas {period_hours}hs)...{C.RESET}")
+
+    cutoff = datetime.now() - timedelta(hours=period_hours)
+    result = {
+        "hostname":     hostname,
+        "period_hours": period_hours,
+        "summary": {
+            "auth_fail_total":    0,
+            "auth_ok_total":      0,
+            "brute_force_count":  0,
+            "syslog_error_count": 0,
+            "syslog_crit_count":  0,
+        },
+        "top_ips":      [],
+        "top_users":    [],
+        "brute_events": [],
+        "syslog_errors":[],
+    }
+
+    # ── auth.log ─────────────────────────────────────────────────
+    auth_log = "/var/log/auth.log"
+    if os.path.exists(auth_log):
+        ip_fails    = defaultdict(int)
+        user_fails  = defaultdict(int)
+        ip_timeline = defaultdict(list)  # ip -> list of datetimes
+        year        = datetime.now().year
+
+        # Regex patterns
+        re_fail = re.compile(
+            r"(\w+ +\d+ \d+:\d+:\d+).+Failed password for (?:invalid user )?(\S+) from (\S+)"
+        )
+        re_ok = re.compile(
+            r"(\w+ +\d+ \d+:\d+:\d+).+Accepted (?:password|publickey) for (\S+) from (\S+)"
+        )
+        re_invalid = re.compile(
+            r"(\w+ +\d+ \d+:\d+:\d+).+Invalid user (\S+) from (\S+)"
+        )
+
+        try:
+            with open(auth_log, "r", errors="replace") as f:
+                for line in f:
+                    # Parse timestamp
+                    ts_match = re.match(r"(\w+ +\d+ \d+:\d+:\d+)", line)
+                    if not ts_match:
+                        continue
+                    try:
+                        ts = datetime.strptime(f"{year} {ts_match.group(1)}", "%Y %b %d %H:%M:%S")
+                        # Ajustar año si estamos en enero y el log es de diciembre
+                        if ts > datetime.now() + timedelta(days=1):
+                            ts = ts.replace(year=year - 1)
+                    except ValueError:
+                        continue
+
+                    if ts < cutoff:
+                        continue
+
+                    # Failed password
+                    m = re_fail.search(line)
+                    if m:
+                        user, ip = m.group(2), m.group(3)
+                        ip_fails[ip] += 1
+                        user_fails[user] += 1
+                        ip_timeline[ip].append(ts)
+                        result["summary"]["auth_fail_total"] += 1
+                        continue
+
+                    # Invalid user
+                    m = re_invalid.search(line)
+                    if m:
+                        user, ip = m.group(2), m.group(3)
+                        ip_fails[ip] += 1
+                        user_fails[user] += 1
+                        ip_timeline[ip].append(ts)
+                        result["summary"]["auth_fail_total"] += 1
+                        continue
+
+                    # Accepted login
+                    m = re_ok.search(line)
+                    if m:
+                        result["summary"]["auth_ok_total"] += 1
+
+        except PermissionError:
+            print(f"  {C.YELLOW}⚠  Sin permiso para leer {auth_log} — ejecutá con sudo{C.RESET}")
+
+        # Top IPs (ordenadas por intentos)
+        result["top_ips"] = [
+            {"ip": ip, "attempts": count}
+            for ip, count in sorted(ip_fails.items(), key=lambda x: -x[1])[:10]
+        ]
+
+        # Top usuarios atacados
+        result["top_users"] = [
+            {"user": user, "attempts": count}
+            for user, count in sorted(user_fails.items(), key=lambda x: -x[1])[:10]
+        ]
+
+        # Detección de fuerza bruta: >=10 intentos en 5 minutos
+        brute_events = []
+        window = timedelta(minutes=5)
+        threshold = 10
+        for ip, times in ip_timeline.items():
+            times_sorted = sorted(times)
+            for i in range(len(times_sorted)):
+                window_end = times_sorted[i] + window
+                count_in_window = sum(1 for t in times_sorted[i:] if t <= window_end)
+                if count_in_window >= threshold:
+                    brute_events.append({
+                        "ip":        ip,
+                        "attempts":  count_in_window,
+                        "first_seen": times_sorted[i].isoformat(),
+                        "window_min": 5,
+                    })
+                    break  # Una alerta por IP es suficiente
+        result["brute_events"]              = brute_events
+        result["summary"]["brute_force_count"] = len(brute_events)
+
+    else:
+        print(f"  {C.MUTED}  auth.log no encontrado — saltando{C.RESET}")
+
+    # ── syslog ────────────────────────────────────────────────────
+    syslog_path = "/var/log/syslog"
+    if not os.path.exists(syslog_path):
+        syslog_path = "/var/log/messages"  # CentOS/RHEL
+
+    if os.path.exists(syslog_path):
+        syslog_errors = []
+        re_level = re.compile(r"\b(error|crit|alert|emerg|fail|critical)\b", re.IGNORECASE)
+        year = datetime.now().year
+
+        try:
+            with open(syslog_path, "r", errors="replace") as f:
+                for line in f:
+                    ts_match = re.match(r"(\w+ +\d+ \d+:\d+:\d+)", line)
+                    if not ts_match:
+                        continue
+                    try:
+                        ts = datetime.strptime(f"{year} {ts_match.group(1)}", "%Y %b %d %H:%M:%S")
+                        if ts > datetime.now() + timedelta(days=1):
+                            ts = ts.replace(year=year - 1)
+                    except ValueError:
+                        continue
+                    if ts < cutoff:
+                        continue
+
+                    m = re_level.search(line)
+                    if m:
+                        level = m.group(1).upper()
+                        # Evitar spam de líneas similares (deduplicar)
+                        msg = line.strip()
+                        if len(syslog_errors) < 50:
+                            syslog_errors.append({
+                                "timestamp": ts.isoformat(),
+                                "level":     level,
+                                "message":   msg[:200],
+                            })
+                        if level in ("CRIT","ALERT","EMERG","CRITICAL"):
+                            result["summary"]["syslog_crit_count"] += 1
+                        else:
+                            result["summary"]["syslog_error_count"] += 1
+
+        except PermissionError:
+            print(f"  {C.YELLOW}⚠  Sin permiso para leer {syslog_path}{C.RESET}")
+
+        result["syslog_errors"] = syslog_errors
+    else:
+        print(f"  {C.MUTED}  syslog no encontrado — saltando{C.RESET}")
+
+    # ── Resumen por pantalla ──────────────────────────────────────
+    s = result["summary"]
+    print(f"  {C.RED}❌ Auth fallidos  : {s['auth_fail_total']}{C.RESET}")
+    print(f"  {C.GREEN}✅ Auth exitosos  : {s['auth_ok_total']}{C.RESET}")
+    if s["brute_force_count"]:
+        print(f"  {C.RED}🚨 Fuerza bruta   : {s['brute_force_count']} eventos detectados{C.RESET}")
+    print(f"  {C.YELLOW}⚠  Errores syslog : {s['syslog_error_count']} errores / {s['syslog_crit_count']} críticos{C.RESET}")
+
+    return result
+
+
+def send_logs_to_panel(log_data: dict):
+    """Envía el análisis de logs al backend."""
+    log_url = API_URL.replace("/audit", "/logs")
+    print(f"\n{C.CYAN}  📡 Enviando análisis de logs...{C.RESET}")
+    try:
+        body = json.dumps(log_data, ensure_ascii=False, default=str).encode("utf-8")
+        req  = urllib.request.Request(
+            log_url, data=body,
+            headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+            print(f"  {C.GREEN}✅ Logs enviados:{C.RESET} {result.get('message','OK')}\n")
+    except Exception as e:
+        print(f"  {C.YELLOW}⚠  No se pudieron enviar los logs:{C.RESET} {e}\n")
 
 def send_to_panel(data: dict):
     """Envía el resultado automáticamente al panel ServerHardenPro."""

@@ -375,6 +375,97 @@ def get_global_summary() -> dict:
         "avg_score": round(row["avg_score"] or 0)
     }
 
+
+# ══════════════════════════════════════════════════════════════════
+#  LOGS
+# ══════════════════════════════════════════════════════════════════
+def save_log_analysis(hostname: str, data: dict):
+    conn = sqlite3.connect(DB_PATH)
+    c    = conn.cursor()
+    now  = datetime.datetime.now().isoformat()
+
+    c.execute("SELECT id FROM servers WHERE hostname=?", (hostname,))
+    row = c.fetchone()
+    if not row:
+        conn.close()
+        return
+    server_id = row[0]
+
+    s = data.get("summary", {})
+    c.execute("""
+        INSERT INTO log_analysis (
+            server_id, analyzed_at, period_hours,
+            auth_fail_total, auth_ok_total, brute_force_count,
+            syslog_error_count, syslog_crit_count,
+            top_ips, top_users, brute_events, syslog_errors, raw_json
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, (
+        server_id, now, data.get("period_hours", 24),
+        s.get("auth_fail_total", 0), s.get("auth_ok_total", 0),
+        s.get("brute_force_count", 0),
+        s.get("syslog_error_count", 0), s.get("syslog_crit_count", 0),
+        json.dumps(data.get("top_ips", []),      ensure_ascii=False),
+        json.dumps(data.get("top_users", []),    ensure_ascii=False),
+        json.dumps(data.get("brute_events", []), ensure_ascii=False),
+        json.dumps(data.get("syslog_errors", []),ensure_ascii=False),
+        json.dumps(data, ensure_ascii=False)
+    ))
+    conn.commit()
+    conn.close()
+    print(f"✅ Logs guardados — {hostname}")
+
+def get_log_analysis(hostname: str) -> dict:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT id FROM servers WHERE hostname=?", (hostname,))
+    row = c.fetchone()
+    if not row:
+        conn.close()
+        return {}
+    c.execute("""
+        SELECT * FROM log_analysis WHERE server_id=?
+        ORDER BY analyzed_at DESC LIMIT 1
+    """, (row[0],))
+    r = c.fetchone()
+    conn.close()
+    if not r:
+        return {}
+    return {
+        "analyzed_at":        r["analyzed_at"],
+        "period_hours":       r["period_hours"],
+        "summary": {
+            "auth_fail_total":    r["auth_fail_total"],
+            "auth_ok_total":      r["auth_ok_total"],
+            "brute_force_count":  r["brute_force_count"],
+            "syslog_error_count": r["syslog_error_count"],
+            "syslog_crit_count":  r["syslog_crit_count"],
+        },
+        "top_ips":      json.loads(r["top_ips"]      or "[]"),
+        "top_users":    json.loads(r["top_users"]    or "[]"),
+        "brute_events": json.loads(r["brute_events"] or "[]"),
+        "syslog_errors":json.loads(r["syslog_errors"]or "[]"),
+    }
+
+def get_log_history(hostname: str, limit: int = 14) -> list:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT id FROM servers WHERE hostname=?", (hostname,))
+    row = c.fetchone()
+    if not row:
+        conn.close()
+        return []
+    c.execute("""
+        SELECT analyzed_at, auth_fail_total, auth_ok_total,
+               brute_force_count, syslog_error_count, syslog_crit_count
+        FROM log_analysis WHERE server_id=?
+        ORDER BY analyzed_at DESC LIMIT ?
+    """, (row[0], limit))
+    history = [dict(r) for r in c.fetchall()]
+    conn.close()
+    return history
+
 def _score_to_status(score: int) -> str:
     if score >= 80: return "OK"
     if score >= 60: return "WARN"
