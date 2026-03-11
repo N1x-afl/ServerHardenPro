@@ -30,6 +30,14 @@
   --shadow: rgba(0,0,0,.12);
   --grid-line: rgba(0,100,180,.04);
 }
+[data-theme="light"] body::before { opacity: 0.08; filter: saturate(0.5); }
+[data-theme="light"] body::after {
+  background: linear-gradient(135deg,
+    rgba(240,244,248,.88) 0%,
+    rgba(248,250,252,.85) 50%,
+    rgba(240,244,248,.90) 100%
+  );
+}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
