@@ -531,6 +531,7 @@ body.light-mode {
   border: none;
   color: #080c10;
   font-size: 20px;
+  font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -539,16 +540,16 @@ body.light-mode {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity .3s ease, transform .3s ease;
-  z-index: 999;
+  z-index: 1001;
   pointer-events: none;
 }
 #scroll-top-btn.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: all;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  pointer-events: all !important;
 }
 #scroll-top-btn:hover {
-  transform: translateY(-3px);
+  transform: translateY(-3px) !important;
   box-shadow: 0 8px 28px rgba(0,229,255,0.5);
 }
 
@@ -575,10 +576,10 @@ body.light-mode {
 /* ── Botón flotante toggle ──────────────────────────────────────── */
 #sidebar-float-btn {
   position: fixed;
-  left: 16px;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
+  width: 28px;
   height: 56px;
   border-radius: 0 10px 10px 0;
   background: var(--glass-bg2);
@@ -587,30 +588,22 @@ body.light-mode {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: var(--cyan);
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
-  z-index: 998;
-  box-shadow: 4px 0 18px rgba(0,0,0,.3);
-  transition: all .3s ease;
-  opacity: 0;
-  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 4px 0 18px rgba(0,0,0,.4);
+  transition: width .2s ease, background .2s ease;
 }
 #sidebar-float-btn.visible {
-  opacity: 1;
-  pointer-events: all;
+  display: flex !important;
 }
 #sidebar-float-btn:hover {
-  background: rgba(0,229,255,.15);
+  background: rgba(0,229,255,.2);
   border-color: var(--cyan);
-  box-shadow: 4px 0 24px rgba(0,229,255,.25);
-  width: 42px;
-}
-#sidebar-float-btn .btn-arrow {
-  transition: transform .3s ease;
-  display: inline-block;
+  width: 36px;
 }
 
 /* ── Botón esconder dentro del sidebar ─────────────────────────── */
@@ -1594,37 +1587,34 @@ function renderLogs(data, hostname) {
 // ══════════════════════════════════════════════════════════════════
 const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.documentElement;
 
-window.addEventListener('scroll', () => {
+// Scroll to top — escuchar en window y en .content
+function initScrollTop() {
   const btn = document.getElementById('scroll-top-btn');
-  if (window.scrollY > 300) btn.classList.add('visible');
-  else btn.classList.remove('visible');
-}, { passive: true });
+  if (!btn) return;
 
-// También escuchar scroll en el contenedor principal si tiene overflow
-document.addEventListener('DOMContentLoaded', () => {
-  const scroller = document.querySelector('.main-content') || document.querySelector('.content');
+  const scroller = document.querySelector('.content');
+
+  const checkScroll = () => {
+    const scrolled = (scroller ? scroller.scrollTop : window.scrollY) > 200;
+    btn.classList.toggle('visible', scrolled);
+  };
+
   if (scroller) {
-    scroller.addEventListener('scroll', () => {
-      const btn = document.getElementById('scroll-top-btn');
-      if (scroller.scrollTop > 300) btn.classList.add('visible');
-      else btn.classList.remove('visible');
-    }, { passive: true });
+    scroller.addEventListener('scroll', checkScroll, { passive: true });
   }
-});
+  window.addEventListener('scroll', checkScroll, { passive: true });
+}
 
 function scrollToTop() {
-  // Intentar scroll en el contenedor principal
-  const scroller = document.querySelector('.main-content') || document.querySelector('.content');
-  if (scroller) {
-    scroller.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  const scroller = document.querySelector('.content');
+  if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ══════════════════════════════════════════════════════════════════
 //  SIDEBAR — SLIDE + FADE
 // ══════════════════════════════════════════════════════════════════
-let sidebarHidden = localStorage.getItem('shp-sidebar-hidden') === 'true';
+let sidebarHidden = false; // Siempre visible al cargar
 
 function initSidebar() {
   if (sidebarHidden) applySidebarState(false);
@@ -1632,7 +1622,7 @@ function initSidebar() {
 
 function toggleSidebar() {
   sidebarHidden = !sidebarHidden;
-  localStorage.setItem('shp-sidebar-hidden', sidebarHidden);
+  // No persistir — siempre visible al recargar
   applySidebarState(true);
 }
 
@@ -1869,6 +1859,7 @@ function renderInventory(inv, hostname) {
 (async () => {
   tryRestoreSession();
   initSidebar();
+  initScrollTop();
   setInterval(() => {
     if (authToken) { loadServers(); loadSummary(); }
   }, 60000);
