@@ -107,7 +107,12 @@ header {
 /* ══ LAYOUT ══════════════════════════════════════════════════════ */
 .app-layout {
   position: relative; z-index: 1;
-  display: flex; min-height: calc(100vh - 68px);
+  display: flex;
+  height: calc(100vh - 68px);
+  overflow: hidden;
+}
+.content {
+  overflow-y: auto !important;
 }
 
 /* ══ SIDEBAR ══════════════════════════════════════════════════════ */
@@ -171,8 +176,6 @@ header {
   flex: 1; min-width: 0;
   padding: 24px 28px;
   display: flex; flex-direction: column; gap: 20px;
-  overflow-y: auto;
-  height: calc(100vh - 68px);
 }
 
 /* ── STATS ── */
@@ -1595,17 +1598,17 @@ function initScrollTop() {
   const btn = document.getElementById('scroll-top-btn');
   if (!btn) return;
 
-  const scroller = document.querySelector('.content');
-
-  const checkScroll = () => {
-    const scrolled = (scroller ? scroller.scrollTop : window.scrollY) > 200;
+  const checkScroll = (el) => {
+    const scrolled = el.scrollTop > 200 || window.scrollY > 200;
     btn.classList.toggle('visible', scrolled);
   };
 
-  if (scroller) {
-    scroller.addEventListener('scroll', checkScroll, { passive: true });
-  }
-  window.addEventListener('scroll', checkScroll, { passive: true });
+  // Escuchar en todos los posibles scrollers
+  document.querySelectorAll('.content, .app-layout, main').forEach(el => {
+    el.addEventListener('scroll', () => checkScroll(el), { passive: true });
+  });
+  window.addEventListener('scroll', () => checkScroll(document.documentElement), { passive: true });
+  document.addEventListener('scroll', () => checkScroll(document.documentElement), { passive: true });
 }
 
 function scrollToTop() {
