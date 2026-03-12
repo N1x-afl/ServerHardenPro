@@ -488,6 +488,173 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
 .log-period { font-family:var(--mono); font-size:10px; color:var(--muted); padding: 10px 22px 0; letter-spacing:1px; }
 .log-no-data { text-align:center; padding:30px; font-family:var(--mono); font-size:12px; color:var(--muted); }
 
+
+/* ══ GLASSMORPHISM ═══════════════════════════════════════════════ */
+:root {
+  --glass-bg:     rgba(13, 19, 26, 0.70);
+  --glass-bg2:    rgba(18, 26, 36, 0.65);
+  --glass-bg3:    rgba(22, 32, 44, 0.60);
+  --glass-border: rgba(0, 229, 255, 0.12);
+}
+body.light-mode {
+  --glass-bg:     rgba(240, 244, 248, 0.72);
+  --glass-bg2:    rgba(255, 255, 255, 0.68);
+  --glass-bg3:    rgba(248, 250, 252, 0.65);
+  --glass-border: rgba(0, 150, 200, 0.18);
+}
+
+/* Aplicar glass a los elementos principales */
+.sidebar           { background: var(--glass-bg)  !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-right: 1px solid var(--glass-border) !important; }
+.header            { background: var(--glass-bg)  !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--glass-border) !important; }
+.stat-card         { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border) !important; }
+.compliance-card   { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border) !important; }
+.detail-panel      { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.server-card       { background: var(--glass-bg3) !important; backdrop-filter: blur(8px);  -webkit-backdrop-filter: blur(8px);  }
+.checks-table      { background: transparent !important; }
+.checks-table thead th { background: var(--glass-bg3) !important; backdrop-filter: blur(8px); }
+.tab-bar           { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border) !important; }
+.inv-card          { background: var(--glass-bg3) !important; backdrop-filter: blur(8px);  border: 1px solid var(--glass-border) !important; }
+.log-stat          { background: var(--glass-bg3) !important; backdrop-filter: blur(8px);  border: 1px solid var(--glass-border) !important; }
+.syslog-item       { background: var(--glass-bg3) !important; backdrop-filter: blur(6px);  }
+.auth-box          { background: var(--glass-bg2) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+#auth-overlay      { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
+/* ══ SCROLL TO TOP ═══════════════════════════════════════════════ */
+#scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  border: none;
+  color: #080c10;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,229,255,0.35);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .3s ease, transform .3s ease;
+  z-index: 999;
+  pointer-events: none;
+}
+#scroll-top-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+#scroll-top-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,229,255,0.5);
+}
+
+/* ══ SIDEBAR COLAPSABLE ══════════════════════════════════════════ */
+.sidebar {
+  transition: width .35s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden;
+}
+.sidebar.collapsed {
+  width: 64px !important;
+  min-width: 64px !important;
+}
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed .server-count,
+.sidebar.collapsed .server-name,
+.sidebar.collapsed .server-os,
+.sidebar.collapsed .server-ip,
+.sidebar.collapsed .compliance-label,
+.sidebar.collapsed .progress-bar-wrap,
+.sidebar.collapsed .score-badge {
+  display: none !important;
+}
+.sidebar.collapsed .server-card {
+  padding: 10px 8px !important;
+  justify-content: center !important;
+  margin: 4px 8px !important;
+  border-radius: 10px !important;
+  position: relative;
+}
+.sidebar.collapsed .server-logo {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 20px !important;
+  margin: 0 auto !important;
+}
+/* Tooltip al hover en collapsed */
+.sidebar.collapsed .server-card::after {
+  content: attr(data-hostname);
+  position: absolute;
+  left: 72px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s;
+  z-index: 1000;
+  color: var(--text);
+}
+.sidebar.collapsed .server-card:hover::after {
+  opacity: 1;
+}
+/* Botón toggle */
+.sidebar-toggle {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--cyan);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: all .2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.sidebar-toggle:hover {
+  background: var(--cyan);
+  color: #080c10;
+  border-color: var(--cyan);
+}
+.sidebar { position: relative; }
+
+/* Status dot en modo collapsed */
+.sidebar.collapsed .status-dot-mini {
+  display: block !important;
+}
+.status-dot-mini {
+  display: none;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: 6px; right: 6px;
+}
+.status-dot-mini.ok   { background: var(--green); }
+.status-dot-mini.warn { background: var(--yellow); }
+.status-dot-mini.crit { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+/* Contenido principal se expande */
+.main-content {
+  transition: margin-left .35s cubic-bezier(.4,0,.2,1);
+}
+
 </style>
 </head>
 <body>
@@ -1421,6 +1588,73 @@ function renderLogs(data, hostname) {
     </div>`;
 }
 
+
+// ══════════════════════════════════════════════════════════════════
+//  SCROLL TO TOP
+// ══════════════════════════════════════════════════════════════════
+const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.documentElement;
+
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scroll-top-btn');
+  if (window.scrollY > 300) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+}, { passive: true });
+
+// También escuchar scroll en el contenedor principal si tiene overflow
+document.addEventListener('DOMContentLoaded', () => {
+  const scroller = document.querySelector('.main-content') || document.querySelector('.content');
+  if (scroller) {
+    scroller.addEventListener('scroll', () => {
+      const btn = document.getElementById('scroll-top-btn');
+      if (scroller.scrollTop > 300) btn.classList.add('visible');
+      else btn.classList.remove('visible');
+    }, { passive: true });
+  }
+});
+
+function scrollToTop() {
+  // Intentar scroll en el contenedor principal
+  const scroller = document.querySelector('.main-content') || document.querySelector('.content');
+  if (scroller) {
+    scroller.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SIDEBAR COLAPSABLE
+// ══════════════════════════════════════════════════════════════════
+let sidebarCollapsed = localStorage.getItem('shp-sidebar-collapsed') === 'true';
+
+function initSidebar() {
+  if (sidebarCollapsed) applySidebarState(false);
+}
+
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  localStorage.setItem('shp-sidebar-collapsed', sidebarCollapsed);
+  applySidebarState(true);
+}
+
+function applySidebarState(animate) {
+  const sidebar = document.getElementById('sidebar');
+  const btn     = document.getElementById('sidebar-toggle');
+  if (!sidebar) return;
+
+  if (sidebarCollapsed) {
+    sidebar.classList.add('collapsed');
+    if (btn) btn.textContent = '▶';
+    if (btn) btn.title = 'Expandir sidebar';
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (btn) btn.textContent = '◀';
+    if (btn) btn.title = 'Colapsar sidebar';
+  }
+}
+
+// Patch renderServers para agregar data-hostname y status-dot-mini
+const _origRenderServers = window.renderServers;
+
 // ══════════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════════
@@ -1632,10 +1866,14 @@ function renderInventory(inv, hostname) {
 
 (async () => {
   tryRestoreSession();
+  initSidebar();
   setInterval(() => {
     if (authToken) { loadServers(); loadSummary(); }
   }, 60000);
 })();
 </script>
+  <!-- Scroll to top -->
+  <button id="scroll-top-btn" onclick="scrollToTop()" title="Volver arriba">↑</button>
+
 </body>
 </html>
