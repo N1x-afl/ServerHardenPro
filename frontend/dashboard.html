@@ -562,7 +562,7 @@ body.light-mode {
   position: relative;
   flex-shrink: 0;
 }
-.sidebar.hidden {
+.sidebar.hidden, aside.hidden {
   transform: translateX(-110%) !important;
   opacity: 0 !important;
   width: 0 !important;
@@ -752,7 +752,7 @@ body.light-mode {
 <div class="app-layout">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <p class="section-label" id="srv-label">// Cargando...</p>
     <div id="server-list"><div class="loader"></div></div>
     <button class="sidebar-hide-btn" onclick="toggleSidebar()">◀ &nbsp;ESCONDER</button>
@@ -1639,19 +1639,21 @@ function toggleSidebar() {
 function applySidebarState(animate) {
   const sidebar  = document.getElementById('sidebar');
   const floatBtn = document.getElementById('sidebar-float-btn');
-  if (!sidebar) return;
+  if (!sidebar) {
+    console.warn('sidebar element not found');
+    return;
+  }
 
   if (sidebarHidden) {
-    // Esconder con slide+fade
     sidebar.classList.add('hidden');
-    // Mostrar botón flotante con delay para que coincida con la animación
     setTimeout(() => {
       if (floatBtn) floatBtn.classList.add('visible');
-    }, animate ? 300 : 0);
+    }, animate ? 350 : 0);
   } else {
-    // Mostrar con slide+fade
     sidebar.classList.remove('hidden');
-    if (floatBtn) floatBtn.classList.remove('visible');
+    if (floatBtn) {
+      floatBtn.classList.remove('visible');
+    }
   }
 }
 
