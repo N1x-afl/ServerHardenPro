@@ -488,6 +488,163 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
 .log-period { font-family:var(--mono); font-size:10px; color:var(--muted); padding: 10px 22px 0; letter-spacing:1px; }
 .log-no-data { text-align:center; padding:30px; font-family:var(--mono); font-size:12px; color:var(--muted); }
 
+
+/* ══ GLASSMORPHISM ═══════════════════════════════════════════════ */
+:root {
+  --glass-bg:     rgba(13, 19, 26, 0.70);
+  --glass-bg2:    rgba(18, 26, 36, 0.65);
+  --glass-bg3:    rgba(22, 32, 44, 0.60);
+  --glass-border: rgba(0, 229, 255, 0.12);
+}
+body.light-mode {
+  --glass-bg:     rgba(240, 244, 248, 0.72);
+  --glass-bg2:    rgba(255, 255, 255, 0.68);
+  --glass-bg3:    rgba(248, 250, 252, 0.65);
+  --glass-border: rgba(0, 150, 200, 0.18);
+}
+
+/* Aplicar glass a los elementos principales */
+.sidebar           { background: var(--glass-bg)  !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-right: 1px solid var(--glass-border) !important; }
+.header            { background: var(--glass-bg)  !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--glass-border) !important; }
+.stat-card         { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border) !important; }
+.compliance-card   { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--glass-border) !important; }
+.detail-panel      { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.server-card       { background: var(--glass-bg3) !important; backdrop-filter: blur(8px);  -webkit-backdrop-filter: blur(8px);  }
+.checks-table      { background: transparent !important; }
+.checks-table thead th { background: var(--glass-bg3) !important; backdrop-filter: blur(8px); }
+.tab-bar           { background: var(--glass-bg2) !important; backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border) !important; }
+.inv-card          { background: var(--glass-bg3) !important; backdrop-filter: blur(8px);  border: 1px solid var(--glass-border) !important; }
+.log-stat          { background: var(--glass-bg3) !important; backdrop-filter: blur(8px);  border: 1px solid var(--glass-border) !important; }
+.syslog-item       { background: var(--glass-bg3) !important; backdrop-filter: blur(6px);  }
+.auth-box          { background: var(--glass-bg2) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+#auth-overlay      { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
+/* ══ SCROLL TO TOP ═══════════════════════════════════════════════ */
+#scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+  border: none;
+  color: #080c10;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,229,255,0.35);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .3s ease, transform .3s ease;
+  z-index: 9999;
+  display: none;
+}
+#scroll-top-btn.visible {
+  display: flex !important;
+}
+#scroll-top-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,229,255,0.5);
+}
+
+/* ══ SIDEBAR COLAPSABLE — SLIDE + FADE ═══════════════════════════ */
+.sidebar {
+  transition: transform .4s cubic-bezier(.4,0,.2,1),
+              opacity   .4s cubic-bezier(.4,0,.2,1),
+              width     .4s cubic-bezier(.4,0,.2,1) !important;
+  transform: translateX(0);
+  opacity: 1;
+  position: relative;
+  flex-shrink: 0;
+}
+.sidebar.hidden, aside.hidden {
+  transform: translateX(-110%) !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  pointer-events: none;
+}
+
+/* ── Botón flotante toggle ──────────────────────────────────────── */
+#sidebar-float-btn {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 56px;
+  border-radius: 0 10px 10px 0;
+  background: var(--glass-bg2);
+  border: 1px solid var(--glass-border);
+  border-left: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--cyan);
+  font-size: 14px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  box-shadow: 4px 0 18px rgba(0,0,0,.4);
+  transition: width .2s ease, background .2s ease;
+}
+#sidebar-float-btn.visible {
+  display: flex !important;
+}
+#sidebar-float-btn:hover {
+  background: rgba(0,229,255,.2);
+  border-color: var(--cyan);
+  width: 36px;
+}
+
+/* ── Botón esconder dentro del sidebar ─────────────────────────── */
+.sidebar-hide-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px 12px;
+  padding: 8px 14px;
+  background: rgba(0,229,255,.06);
+  border: 1px solid rgba(0,229,255,.12);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all .2s;
+  text-transform: uppercase;
+}
+.sidebar-hide-btn:hover {
+  background: rgba(0,229,255,.12);
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* Status dot */
+.status-dot-mini {
+  display: none;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: 6px; right: 6px;
+}
+.status-dot-mini.ok   { background: var(--green); }
+.status-dot-mini.warn { background: var(--yellow); }
+.status-dot-mini.crit { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+/* Contenido principal se expande suavemente */
+.app-layout {
+  transition: all .4s cubic-bezier(.4,0,.2,1);
+}
+
 </style>
 </head>
 <body>
@@ -586,9 +743,10 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
 <div class="app-layout">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <p class="section-label" id="srv-label">// Cargando...</p>
     <div id="server-list"><div class="loader"></div></div>
+    <button class="sidebar-hide-btn" onclick="toggleSidebar()">◀ &nbsp;ESCONDER</button>
   </aside>
 
   <!-- CONTENT -->
@@ -767,8 +925,14 @@ footer { text-align: center; padding: 18px; font-family: var(--mono); font-size:
 // ══════════════════════════════════════════════════════════════════
 //  CONFIG
 // ══════════════════════════════════════════════════════════════════
-const API    = `http://${window.location.hostname}:8010`;
-const WS_URL = `ws://${window.location.hostname}:8010/ws`;
+// ── Backend URL — usa localStorage si fue configurado manualmente ──
+function getBackendURL() {
+  const saved = localStorage.getItem('shp-backend-url');
+  if (saved) return saved.replace(/\/$/, '');
+  return `http://${window.location.hostname}:8010`;
+}
+let API    = getBackendURL();
+let WS_URL = API.replace('http', 'ws') + '/ws';
 let currentServer = null;
 let scoreChart = null;
 let ws = null;
@@ -1421,6 +1585,64 @@ function renderLogs(data, hostname) {
     </div>`;
 }
 
+
+// ══════════════════════════════════════════════════════════════════
+//  SCROLL TO TOP
+// ══════════════════════════════════════════════════════════════════
+const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.documentElement;
+
+// Scroll to top — escuchar en window y en .content
+function initScrollTop() {
+  const btn = document.getElementById('scroll-top-btn');
+  if (!btn) return;
+  const onScroll = () => {
+    btn.classList.toggle('visible', (window.scrollY || document.documentElement.scrollTop) > 200);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  document.addEventListener('scroll', onScroll, { passive: true });
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SIDEBAR — SLIDE + FADE
+// ══════════════════════════════════════════════════════════════════
+let sidebarHidden = false; // Siempre visible al cargar
+
+function initSidebar() {
+  if (sidebarHidden) applySidebarState(false);
+}
+
+function toggleSidebar() {
+  sidebarHidden = !sidebarHidden;
+  // No persistir — siempre visible al recargar
+  applySidebarState(true);
+}
+
+function applySidebarState(animate) {
+  const sidebar  = document.getElementById('sidebar');
+  const floatBtn = document.getElementById('sidebar-float-btn');
+  if (!sidebar) {
+    console.warn('sidebar element not found');
+    return;
+  }
+
+  if (sidebarHidden) {
+    sidebar.classList.add('hidden');
+    setTimeout(() => {
+      if (floatBtn) floatBtn.classList.add('visible');
+    }, animate ? 350 : 0);
+  } else {
+    sidebar.classList.remove('hidden');
+    if (floatBtn) {
+      floatBtn.classList.remove('visible');
+    }
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════════
@@ -1524,6 +1746,30 @@ function tryRestoreSession() {
     } catch {}
   }
   document.getElementById('auth-overlay').style.display = 'flex';
+  // Intentar detectar si el backend es accesible
+  checkBackendConnection();
+}
+
+async function checkBackendConnection() {
+  try {
+    await fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) });
+    document.getElementById('backend-status').style.display = 'none';
+  } catch {
+    const el = document.getElementById('backend-status');
+    if (el) {
+      el.style.display = 'block';
+      el.innerHTML = `⚠ No se puede conectar al backend en <b>${API}</b><br>
+        <small>¿Otra IP? <a href="#" onclick="changeBackendURL()" style="color:var(--cyan)">Configurar URL</a></small>`;
+    }
+  }
+}
+
+function changeBackendURL() {
+  const url = prompt('URL del backend (ej: http://192.168.1.100:8010):', API);
+  if (url && url.startsWith('http')) {
+    localStorage.setItem('shp-backend-url', url.replace(/\/$/, ''));
+    location.reload();
+  }
 }
 
 // ── Override fetch para incluir token en headers ──────────────────
@@ -1542,9 +1788,11 @@ window.fetch = async (url, opts = {}) => {
 async function loadInventory(hostname) {
   document.getElementById('inventory-container').innerHTML = '<div class="loader"></div>';
   try {
-    const data = await (await fetch(`${API}/servers/${hostname}`)).json();
-    renderInventory(data.inventory || {}, hostname);
-  } catch {
+    const res  = await fetch(`${API}/servers/${hostname}/inventory`);
+    const data = await res.json();
+    renderInventory(data.inventory || data, hostname);
+  } catch(e) {
+    console.error('loadInventory error:', e);
     document.getElementById('inventory-container').innerHTML =
       `<div class="empty-state"><div class="empty-icon">❌</div>Error al cargar inventario</div>`;
   }
@@ -1632,10 +1880,20 @@ function renderInventory(inv, hostname) {
 
 (async () => {
   tryRestoreSession();
+  initSidebar();
+  initScrollTop();
   setInterval(() => {
     if (authToken) { loadServers(); loadSummary(); }
   }, 60000);
 })();
 </script>
+  <!-- Sidebar float button (aparece cuando sidebar está oculto) -->
+  <button id="sidebar-float-btn" onclick="toggleSidebar()" title="Mostrar servidores">
+    <span class="btn-arrow">▶</span>
+  </button>
+
+  <!-- Scroll to top -->
+  <button id="scroll-top-btn" onclick="scrollToTop()" title="Volver arriba">↑</button>
+
 </body>
 </html>
