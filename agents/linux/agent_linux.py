@@ -538,7 +538,16 @@ def run_audit():
     # Detectar nombre de distro para el logo del panel
     try:
         distro_info = platform.freedesktop_os_release()
-        distro_name = distro_info.get("NAME", "") or distro_info.get("ID", "linux")
+        # NAME tiene el nombre completo: "Ubuntu", "Zorin OS", "Debian GNU/Linux"
+        # ID tiene el nombre corto: "ubuntu", "zorin", "debian"
+        distro_name = (distro_info.get("NAME") or
+                       distro_info.get("PRETTY_NAME") or
+                       distro_info.get("ID") or
+                       platform.system())
+        # Limpiar: quedarse solo con la primera palabra si es muy largo
+        # Ej: "Zorin OS" → "Zorin OS" (bien), "Ubuntu 22.04 LTS" → "Ubuntu"
+        if len(distro_name) > 20:
+            distro_name = distro_name.split()[0]
     except Exception:
         distro_name = platform.system()
 
@@ -589,7 +598,7 @@ def run_audit():
             "os_full": os_info,
             "ip": socket.gethostbyname(hostname),
             "audit_date": now,
-            "agent_version": "0.1"
+            "agent_version": "0.4"
         },
         "summary": {
             "total": total,

@@ -140,11 +140,13 @@ class ServerInfo(BaseModel):
 class LogAnalysisRequest(BaseModel):
     hostname: str
     period_hours: Optional[int] = 24
-    summary: dict
+    summary: Optional[dict] = {}
     top_ips: Optional[list] = []
     top_users: Optional[list] = []
     brute_events: Optional[list] = []
     syslog_errors: Optional[list] = []
+
+    model_config = {"extra": "allow"}
 
 class AuditResult(BaseModel):
     server: ServerInfo
@@ -290,19 +292,26 @@ async def report_excel(hostname: str, admin = Depends(require_admin)):
 @app.post("/logs", summary="Recibir análisis de logs")
 async def receive_logs(req: LogAnalysisRequest):
     try:
-        save_log_analysis(req.hostname, req.dict())
+        data = req.dict()
+        # Asegurar que summary existe
+        if not data.get("summary"):
+            data["summary"] = {}
+        save_log_analysis(req.hostname, data)
         # Notificar panel en tiempo real
-        bf = req.summary.get("brute_force_count", 0)
+        summary = data.get("summary", {})
+        bf = summary.get("brute_force_count", 0)
         await manager.broadcast({
-            "event":    "new_logs",
-            "hostname": req.hostname,
+            "event":     "new_logs",
+            "hostname":  req.hostname,
             "brute_force": bf,
-            "auth_fail":   req.summary.get("auth_fail_total", 0),
-            "alert":    bf > 0,
+            "auth_fail": summary.get("auth_fail_total", 0),
+            "alert":     bf > 0,
             "timestamp": datetime.datetime.now().isoformat()
         })
         return {"ok": True, "message": f"Logs de {req.hostname} guardados"}
     except Exception as e:
+        import traceback
+        print(f"❌ Error en /logs: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # ── GET /servers/{hostname}/logs ──────────────────────────────────
