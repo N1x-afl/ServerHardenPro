@@ -171,6 +171,8 @@ header {
   flex: 1; min-width: 0;
   padding: 24px 28px;
   display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 68px);
 }
 
 /* ── STATS ── */
@@ -543,6 +545,7 @@ body.light-mode {
   z-index: 1001;
   pointer-events: none;
 }
+body #scroll-top-btn.visible { opacity: 1 !important; transform: translateY(0) !important; pointer-events: all !important; }
 #scroll-top-btn.visible {
   opacity: 1 !important;
   transform: translateY(0) !important;
@@ -1768,9 +1771,14 @@ window.fetch = async (url, opts = {}) => {
 async function loadInventory(hostname) {
   document.getElementById('inventory-container').innerHTML = '<div class="loader"></div>';
   try {
-    const data = await (await fetch(`${API}/servers/${hostname}`)).json();
-    renderInventory(data.inventory || {}, hostname);
-  } catch {
+    // Usar endpoint específico de inventario
+    const res  = await fetch(`${API}/servers/${hostname}/inventory`);
+    const data = await res.json();
+    // El endpoint /inventory devuelve {inventory: {...}} o el objeto directo
+    const inv  = data.inventory || data;
+    renderInventory(inv, hostname);
+  } catch(e) {
+    console.error('Error cargando inventario:', e);
     document.getElementById('inventory-container').innerHTML =
       `<div class="empty-state"><div class="empty-icon">❌</div>Error al cargar inventario</div>`;
   }
