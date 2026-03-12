@@ -424,6 +424,110 @@ def print_result(check):
     print(f"  {icon}  {cat}  {name}")
     print(f"         {detail}")
 
+
+# ══════════════════════════════════════════════════════════════════
+#  INVENTARIO DE HARDWARE
+# ══════════════════════════════════════════════════════════════════
+def collect_inventory() -> dict:
+    """Recolecta información de CPU, RAM, disco, uptime y detecta si es VM."""
+    inv = {}
+
+    # ── CPU ──────────────────────────────────────────────────────
+    try:
+        cpu_model = ""
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                if "model name" in line:
+                    cpu_model = line.split(":")[1].strip()
+                    break
+        inv["cpu_model"] = cpu_model or platform.processor()
+
+        import multiprocessing
+        inv["cpu_cores"]   = multiprocessing.cpu_count()
+        inv["cpu_threads"] = inv["cpu_cores"]
+
+        try:
+            freq_line = open("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq").read().strip()
+            inv["cpu_freq_mhz"] = round(int(freq_line) / 1000, 1)
+        except Exception:
+            inv["cpu_freq_mhz"] = 0.0
+    except Exception:
+        inv["cpu_model"] = platform.processor()
+        inv["cpu_cores"] = 1
+        inv["cpu_threads"] = 1
+        inv["cpu_freq_mhz"] = 0.0
+
+    # ── RAM ──────────────────────────────────────────────────────
+    try:
+        meminfo = {}
+        with open("/proc/meminfo") as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 2:
+                    meminfo[parts[0].rstrip(":")] = int(parts[1])
+        total_kb   = meminfo.get("MemTotal", 0)
+        free_kb    = meminfo.get("MemAvailable", meminfo.get("MemFree", 0))
+        used_kb    = total_kb - free_kb
+        inv["ram_total_gb"] = round(total_kb / 1024 / 1024, 2)
+        inv["ram_used_gb"]  = round(used_kb  / 1024 / 1024, 2)
+        inv["ram_free_gb"]  = round(free_kb  / 1024 / 1024, 2)
+    except Exception:
+        inv["ram_total_gb"] = 0.0
+        inv["ram_used_gb"]  = 0.0
+        inv["ram_free_gb"]  = 0.0
+
+    # ── DISCO (partición raíz) ────────────────────────────────────
+    try:
+        import shutil
+        disk = shutil.disk_usage("/")
+        inv["disk_total_gb"] = round(disk.total / 1024**3, 2)
+        inv["disk_used_gb"]  = round(disk.used  / 1024**3, 2)
+        inv["disk_free_gb"]  = round(disk.free  / 1024**3, 2)
+    except Exception:
+        inv["disk_total_gb"] = 0.0
+        inv["disk_used_gb"]  = 0.0
+        inv["disk_free_gb"]  = 0.0
+
+    # ── UPTIME ───────────────────────────────────────────────────
+    try:
+        with open("/proc/uptime") as f:
+            uptime_secs = float(f.read().split()[0])
+        inv["uptime_hours"] = round(uptime_secs / 3600, 2)
+    except Exception:
+        inv["uptime_hours"] = 0.0
+
+    # ── KERNEL ───────────────────────────────────────────────────
+    inv["kernel"] = platform.release()
+
+    # ── DETECTAR VM ──────────────────────────────────────────────
+    inv["is_vm"]   = False
+    inv["vm_type"] = ""
+    try:
+        dmi = subprocess.check_output(
+            ["systemd-detect-virt", "--vm"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+        if dmi and dmi != "none":
+            inv["is_vm"]   = True
+            inv["vm_type"] = dmi.upper()
+    except Exception:
+        pass
+
+    # Fallback: revisar /proc/cpuinfo y DMI
+    if not inv["is_vm"]:
+        try:
+            cpuinfo = open("/proc/cpuinfo").read().lower()
+            for hint, name in [("vmware","VMware"),("kvm","KVM"),
+                                ("virtualbox","VirtualBox"),("xen","Xen"),
+                                ("hyperv","Hyper-V"),("qemu","QEMU")]:
+                if hint in cpuinfo:
+                    inv["is_vm"]   = True
+                    inv["vm_type"] = name
+                    break
+        except Exception:
+            pass
+
+    return inv
+
 def run_audit():
     print_banner()
 
@@ -438,8 +542,15 @@ def run_audit():
     except Exception:
         distro_name = platform.system()
 
+    # ── Inventario de hardware ───────────────────────────────────
+    inventory = collect_inventory()
+
     print(f"{C.CYAN}  Host   :{C.RESET} {hostname}")
     print(f"{C.CYAN}  OS     :{C.RESET} {os_info}")
+    print(f"{C.CYAN}  CPU    :{C.RESET} {inventory.get('cpu_model','?')} ({inventory.get('cpu_cores','?')} cores)")
+    print(f"{C.CYAN}  RAM    :{C.RESET} {inventory.get('ram_total_gb',0):.1f} GB total / {inventory.get('ram_free_gb',0):.1f} GB libre")
+    print(f"{C.CYAN}  Disco  :{C.RESET} {inventory.get('disk_total_gb',0):.0f} GB total / {inventory.get('disk_free_gb',0):.0f} GB libre")
+    print(f"{C.CYAN}  VM     :{C.RESET} {'Sí — ' + inventory.get('vm_type','') if inventory.get('is_vm') else 'No (Físico)'}")
     print(f"{C.CYAN}  Inicio :{C.RESET} {now}")
     print(f"\n{C.MUTED}  {'─'*60}{C.RESET}\n")
 
@@ -487,7 +598,8 @@ def run_audit():
             "warn": totals["WARN"],
             "score_percent": score
         },
-        "checks": results
+        "checks": results,
+        "inventory": inventory
     }
 
     filename = f"resultado_{hostname}.json"
@@ -499,7 +611,215 @@ def run_audit():
     # ── Envío automático al panel ─────────────────────────────────
     send_to_panel(output)
 
+    # ── Análisis de logs ──────────────────────────────────────────
+    log_data = analyze_logs(hostname)
+    send_logs_to_panel(log_data)
+
     return output
+
+
+# ══════════════════════════════════════════════════════════════════
+#  ANÁLISIS DE LOGS
+# ══════════════════════════════════════════════════════════════════
+def analyze_logs(hostname: str, period_hours: int = 24) -> dict:
+    """Analiza auth.log y syslog buscando patrones de ataque y errores."""
+    import re
+    from collections import defaultdict
+    from datetime import datetime, timedelta
+
+    print(f"\n{C.CYAN}  📋 Analizando logs (últimas {period_hours}hs)...{C.RESET}")
+
+    cutoff = datetime.now() - timedelta(hours=period_hours)
+    result = {
+        "hostname":     hostname,
+        "period_hours": period_hours,
+        "summary": {
+            "auth_fail_total":    0,
+            "auth_ok_total":      0,
+            "brute_force_count":  0,
+            "syslog_error_count": 0,
+            "syslog_crit_count":  0,
+        },
+        "top_ips":      [],
+        "top_users":    [],
+        "brute_events": [],
+        "syslog_errors":[],
+    }
+
+    # ── auth.log ─────────────────────────────────────────────────
+    auth_log = "/var/log/auth.log"
+    if os.path.exists(auth_log):
+        ip_fails    = defaultdict(int)
+        user_fails  = defaultdict(int)
+        ip_timeline = defaultdict(list)  # ip -> list of datetimes
+        year        = datetime.now().year
+
+        # Regex patterns
+        re_fail = re.compile(
+            r"(\w+ +\d+ \d+:\d+:\d+).+Failed password for (?:invalid user )?(\S+) from (\S+)"
+        )
+        re_ok = re.compile(
+            r"(\w+ +\d+ \d+:\d+:\d+).+Accepted (?:password|publickey) for (\S+) from (\S+)"
+        )
+        re_invalid = re.compile(
+            r"(\w+ +\d+ \d+:\d+:\d+).+Invalid user (\S+) from (\S+)"
+        )
+
+        try:
+            with open(auth_log, "r", errors="replace") as f:
+                for line in f:
+                    # Parse timestamp
+                    ts_match = re.match(r"(\w+ +\d+ \d+:\d+:\d+)", line)
+                    if not ts_match:
+                        continue
+                    try:
+                        ts = datetime.strptime(f"{year} {ts_match.group(1)}", "%Y %b %d %H:%M:%S")
+                        # Ajustar año si estamos en enero y el log es de diciembre
+                        if ts > datetime.now() + timedelta(days=1):
+                            ts = ts.replace(year=year - 1)
+                    except ValueError:
+                        continue
+
+                    if ts < cutoff:
+                        continue
+
+                    # Failed password
+                    m = re_fail.search(line)
+                    if m:
+                        user, ip = m.group(2), m.group(3)
+                        ip_fails[ip] += 1
+                        user_fails[user] += 1
+                        ip_timeline[ip].append(ts)
+                        result["summary"]["auth_fail_total"] += 1
+                        continue
+
+                    # Invalid user
+                    m = re_invalid.search(line)
+                    if m:
+                        user, ip = m.group(2), m.group(3)
+                        ip_fails[ip] += 1
+                        user_fails[user] += 1
+                        ip_timeline[ip].append(ts)
+                        result["summary"]["auth_fail_total"] += 1
+                        continue
+
+                    # Accepted login
+                    m = re_ok.search(line)
+                    if m:
+                        result["summary"]["auth_ok_total"] += 1
+
+        except PermissionError:
+            print(f"  {C.YELLOW}⚠  Sin permiso para leer {auth_log} — ejecutá con sudo{C.RESET}")
+
+        # Top IPs (ordenadas por intentos)
+        result["top_ips"] = [
+            {"ip": ip, "attempts": count}
+            for ip, count in sorted(ip_fails.items(), key=lambda x: -x[1])[:10]
+        ]
+
+        # Top usuarios atacados
+        result["top_users"] = [
+            {"user": user, "attempts": count}
+            for user, count in sorted(user_fails.items(), key=lambda x: -x[1])[:10]
+        ]
+
+        # Detección de fuerza bruta: >=10 intentos en 5 minutos
+        brute_events = []
+        window = timedelta(minutes=5)
+        threshold = 10
+        for ip, times in ip_timeline.items():
+            times_sorted = sorted(times)
+            for i in range(len(times_sorted)):
+                window_end = times_sorted[i] + window
+                count_in_window = sum(1 for t in times_sorted[i:] if t <= window_end)
+                if count_in_window >= threshold:
+                    brute_events.append({
+                        "ip":        ip,
+                        "attempts":  count_in_window,
+                        "first_seen": times_sorted[i].isoformat(),
+                        "window_min": 5,
+                    })
+                    break  # Una alerta por IP es suficiente
+        result["brute_events"]              = brute_events
+        result["summary"]["brute_force_count"] = len(brute_events)
+
+    else:
+        print(f"  {C.MUTED}  auth.log no encontrado — saltando{C.RESET}")
+
+    # ── syslog ────────────────────────────────────────────────────
+    syslog_path = "/var/log/syslog"
+    if not os.path.exists(syslog_path):
+        syslog_path = "/var/log/messages"  # CentOS/RHEL
+
+    if os.path.exists(syslog_path):
+        syslog_errors = []
+        re_level = re.compile(r"\b(error|crit|alert|emerg|fail|critical)\b", re.IGNORECASE)
+        year = datetime.now().year
+
+        try:
+            with open(syslog_path, "r", errors="replace") as f:
+                for line in f:
+                    ts_match = re.match(r"(\w+ +\d+ \d+:\d+:\d+)", line)
+                    if not ts_match:
+                        continue
+                    try:
+                        ts = datetime.strptime(f"{year} {ts_match.group(1)}", "%Y %b %d %H:%M:%S")
+                        if ts > datetime.now() + timedelta(days=1):
+                            ts = ts.replace(year=year - 1)
+                    except ValueError:
+                        continue
+                    if ts < cutoff:
+                        continue
+
+                    m = re_level.search(line)
+                    if m:
+                        level = m.group(1).upper()
+                        # Evitar spam de líneas similares (deduplicar)
+                        msg = line.strip()
+                        if len(syslog_errors) < 50:
+                            syslog_errors.append({
+                                "timestamp": ts.isoformat(),
+                                "level":     level,
+                                "message":   msg[:200],
+                            })
+                        if level in ("CRIT","ALERT","EMERG","CRITICAL"):
+                            result["summary"]["syslog_crit_count"] += 1
+                        else:
+                            result["summary"]["syslog_error_count"] += 1
+
+        except PermissionError:
+            print(f"  {C.YELLOW}⚠  Sin permiso para leer {syslog_path}{C.RESET}")
+
+        result["syslog_errors"] = syslog_errors
+    else:
+        print(f"  {C.MUTED}  syslog no encontrado — saltando{C.RESET}")
+
+    # ── Resumen por pantalla ──────────────────────────────────────
+    s = result["summary"]
+    print(f"  {C.RED}❌ Auth fallidos  : {s['auth_fail_total']}{C.RESET}")
+    print(f"  {C.GREEN}✅ Auth exitosos  : {s['auth_ok_total']}{C.RESET}")
+    if s["brute_force_count"]:
+        print(f"  {C.RED}🚨 Fuerza bruta   : {s['brute_force_count']} eventos detectados{C.RESET}")
+    print(f"  {C.YELLOW}⚠  Errores syslog : {s['syslog_error_count']} errores / {s['syslog_crit_count']} críticos{C.RESET}")
+
+    return result
+
+
+def send_logs_to_panel(log_data: dict):
+    """Envía el análisis de logs al backend."""
+    log_url = API_URL.replace("/audit", "/logs")
+    print(f"\n{C.CYAN}  📡 Enviando análisis de logs...{C.RESET}")
+    try:
+        body = json.dumps(log_data, ensure_ascii=False, default=str).encode("utf-8")
+        req  = urllib.request.Request(
+            log_url, data=body,
+            headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+            print(f"  {C.GREEN}✅ Logs enviados:{C.RESET} {result.get('message','OK')}\n")
+    except Exception as e:
+        print(f"  {C.YELLOW}⚠  No se pudieron enviar los logs:{C.RESET} {e}\n")
 
 def send_to_panel(data: dict):
     """Envía el resultado automáticamente al panel ServerHardenPro."""
