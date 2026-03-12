@@ -107,12 +107,7 @@ header {
 /* ══ LAYOUT ══════════════════════════════════════════════════════ */
 .app-layout {
   position: relative; z-index: 1;
-  display: flex;
-  height: calc(100vh - 68px);
-  overflow: hidden;
-}
-.content {
-  overflow-y: auto !important;
+  display: flex; min-height: calc(100vh - 68px);
 }
 
 /* ══ SIDEBAR ══════════════════════════════════════════════════════ */
@@ -538,24 +533,18 @@ body.light-mode {
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 20px rgba(0,229,255,0.35);
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity .3s ease, transform .3s ease;
-  z-index: 1001;
-  pointer-events: none;
+  transition: transform .2s ease, box-shadow .2s ease;
+  z-index: 9999;
 }
-body #scroll-top-btn.visible { opacity: 1 !important; transform: translateY(0) !important; pointer-events: all !important; }
 #scroll-top-btn.visible {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-  pointer-events: all !important;
+  display: flex !important;
 }
 #scroll-top-btn:hover {
-  transform: translateY(-3px) !important;
+  transform: translateY(-3px);
   box-shadow: 0 8px 28px rgba(0,229,255,0.5);
 }
 
@@ -1598,23 +1587,19 @@ function initScrollTop() {
   const btn = document.getElementById('scroll-top-btn');
   if (!btn) return;
 
-  const checkScroll = (el) => {
-    const scrolled = el.scrollTop > 200 || window.scrollY > 200;
-    btn.classList.toggle('visible', scrolled);
+  const onScroll = () => {
+    const y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    btn.classList.toggle('visible', y > 200);
   };
 
-  // Escuchar en todos los posibles scrollers
-  document.querySelectorAll('.content, .app-layout, main').forEach(el => {
-    el.addEventListener('scroll', () => checkScroll(el), { passive: true });
-  });
-  window.addEventListener('scroll', () => checkScroll(document.documentElement), { passive: true });
-  document.addEventListener('scroll', () => checkScroll(document.documentElement), { passive: true });
+  window.addEventListener('scroll', onScroll, { passive: true });
+  document.addEventListener('scroll', onScroll, { passive: true });
 }
 
 function scrollToTop() {
-  const scroller = document.querySelector('.content');
-  if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+  document.body.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1774,14 +1759,11 @@ window.fetch = async (url, opts = {}) => {
 async function loadInventory(hostname) {
   document.getElementById('inventory-container').innerHTML = '<div class="loader"></div>';
   try {
-    // Usar endpoint específico de inventario
     const res  = await fetch(`${API}/servers/${hostname}/inventory`);
     const data = await res.json();
-    // El endpoint /inventory devuelve {inventory: {...}} o el objeto directo
-    const inv  = data.inventory || data;
-    renderInventory(inv, hostname);
+    renderInventory(data.inventory || data, hostname);
   } catch(e) {
-    console.error('Error cargando inventario:', e);
+    console.error('loadInventory error:', e);
     document.getElementById('inventory-container').innerHTML =
       `<div class="empty-state"><div class="empty-icon">❌</div>Error al cargar inventario</div>`;
   }
