@@ -1,34 +1,31 @@
 version: "3.9"
-
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║         ServerHardenPro — Docker Compose                        ║
-# ║  Uso: docker-compose up -d                                       ║
-# ║  Panel: http://localhost:8000                                     ║
-# ║  API:   http://localhost:8000/docs                               ║
+# ║         ServerHardenPro — Docker Compose v0.4                   ║
+# ║  Uso: docker compose up -d --build                               ║
+# ║  Panel: http://TU_IP:8010                                        ║
+# ║  API:   http://TU_IP:8010/docs                                   ║
 # ╚══════════════════════════════════════════════════════════════════╝
-
 services:
-
-  # ── Backend FastAPI ────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: shp_backend
     ports:
-      - "8000:8000"
+      - "8010:8000"
     volumes:
       - ./backend:/app
       - ./frontend:/app/../frontend
-      - shp_data:/app/data
     environment:
-      - DB_PATH=/app/data/shp_database.db
+      - DB_PATH=/app/shp_database.db
+      - SHP_JWT_SECRET=shp-change-this-secret-in-production
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 15s
 
 volumes:
   shp_data:

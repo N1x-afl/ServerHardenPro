@@ -533,6 +533,7 @@ body.light-mode {
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
+<<<<<<< HEAD
   display: flex;
   align-items: center;
   justify-content: center;
@@ -542,6 +543,14 @@ body.light-mode {
   transition: opacity .3s ease, transform .3s ease;
   z-index: 9999;
   display: none;
+=======
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,229,255,0.35);
+  transition: transform .2s ease, box-shadow .2s ease;
+  z-index: 9999;
+>>>>>>> 96e18132c2d00cae71139d6f4d6a4ecbd3aa207b
 }
 #scroll-top-btn.visible {
   display: flex !important;
@@ -1595,9 +1604,18 @@ const mainContent = document.querySelector('.main-content') || document.querySel
 function initScrollTop() {
   const btn = document.getElementById('scroll-top-btn');
   if (!btn) return;
+<<<<<<< HEAD
   const onScroll = () => {
     btn.classList.toggle('visible', (window.scrollY || document.documentElement.scrollTop) > 200);
   };
+=======
+
+  const onScroll = () => {
+    const y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    btn.classList.toggle('visible', y > 200);
+  };
+
+>>>>>>> 96e18132c2d00cae71139d6f4d6a4ecbd3aa207b
   window.addEventListener('scroll', onScroll, { passive: true });
   document.addEventListener('scroll', onScroll, { passive: true });
 }
@@ -1605,6 +1623,10 @@ function initScrollTop() {
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+<<<<<<< HEAD
+=======
+  document.body.scrollTo({ top: 0, behavior: 'smooth' });
+>>>>>>> 96e18132c2d00cae71139d6f4d6a4ecbd3aa207b
 }
 
 // ══════════════════════════════════════════════════════════════════

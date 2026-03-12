@@ -84,6 +84,26 @@ def init_db():
         )
     """)
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS log_analysis (
+            id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+            server_id          INTEGER NOT NULL,
+            analyzed_at        TEXT NOT NULL,
+            period_hours       INTEGER DEFAULT 24,
+            auth_fail_total    INTEGER DEFAULT 0,
+            auth_ok_total      INTEGER DEFAULT 0,
+            brute_force_count  INTEGER DEFAULT 0,
+            syslog_error_count INTEGER DEFAULT 0,
+            syslog_crit_count  INTEGER DEFAULT 0,
+            top_ips            TEXT,
+            top_users          TEXT,
+            brute_events       TEXT,
+            syslog_errors      TEXT,
+            raw_json           TEXT,
+            FOREIGN KEY (server_id) REFERENCES servers(id)
+        )
+    """)
+
     # Migración segura: agregar columnas nuevas si DB ya existe
     inventory_cols = [
         ("os_full","TEXT"),("cpu_model","TEXT"),("cpu_cores","INTEGER"),
