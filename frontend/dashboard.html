@@ -2185,7 +2185,8 @@ async function populateDsoServerSelect() {
   try {
     const token = localStorage.getItem('shp-token');
     const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
-    const servers = await res.json();
+    const raw = await res.json();
+    const servers = Array.isArray(raw) ? raw : (raw.servers || raw.data || []);
     const sel = document.getElementById('dso-server-select');
     sel.innerHTML = '<option value="all">Todos los servidores</option>';
     servers.forEach(s => {
@@ -2300,7 +2301,8 @@ async function loadTimeline() {
   try {
     // Fetch servers to get log data
     const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
-    const servers = await res.json();
+    const raw = await res.json();
+    const servers = Array.isArray(raw) ? raw : (raw.servers || raw.data || []);
     const targets = hostname === 'all' ? servers : servers.filter(s => s.hostname === hostname);
 
     const events = [];
@@ -2378,7 +2380,8 @@ async function loadComparison() {
   const token = localStorage.getItem('shp-token');
   try {
     const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
-    const servers = await res.json();
+    const raw = await res.json();
+    const servers = Array.isArray(raw) ? raw : (raw.servers || raw.data || []);
 
     const rows = await Promise.all(servers.map(async srv => {
       try {
@@ -2447,7 +2450,8 @@ async function loadRecommendations() {
 
   try {
     const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
-    const servers = await res.json();
+    const raw = await res.json();
+    const servers = Array.isArray(raw) ? raw : (raw.servers || raw.data || []);
     const targets = hostname === 'all' ? servers : servers.filter(s => s.hostname === hostname);
 
     const recs = [];
