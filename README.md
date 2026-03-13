@@ -1,22 +1,27 @@
-# 🛡️ ServerHardenPro
+# ServerHardenPro
+
+<div align="center">
+
+![Version](https://img.shields.io/badge/version-0.5.0-cyan?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=for-the-badge&logo=fastapi)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge&logo=docker)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+![SQLite](https://img.shields.io/badge/SQLite-embedded-lightgrey?style=for-the-badge&logo=sqlite)
 
 **Plataforma profesional de auditoría de hardening para servidores Linux y Windows**
 
-![Version](https://img.shields.io/badge/version-0.4.0-cyan?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green?style=for-the-badge&logo=fastapi)
-![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge&logo=docker)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
-
----
+*Professional hardening audit platform for Linux and Windows servers*
 
 ![Dashboard](docs/dashboard.png)
+
+</div>
 
 ---
 
 ## 📋 ¿Qué es ServerHardenPro?
 
-ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, envía los resultados a un **panel web centralizado en tiempo real** y permite visualizar el estado de seguridad de toda tu infraestructura desde un solo lugar.
+ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, envía los resultados a un panel web centralizado en tiempo real y permite visualizar el estado de seguridad de toda tu infraestructura desde un solo lugar.
 
 ---
 
@@ -24,27 +29,26 @@ ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, e
 
 | Feature | Descripción |
 |---------|-------------|
-| 🔐 **Auth JWT** | Login y registro con roles Admin / Viewer |
-| 📊 **Panel web** | Dashboard en tiempo real via WebSockets |
-| 🐧 **Agente Linux** | 22 checks — SSH, Firewall, Usuarios, Red, Servicios |
-| 🪟 **Agente Windows** | 25 checks — Contraseñas, RDP, SMB, Defender, UAC |
-| 🖥️ **Inventario** | CPU, RAM, Disco, Uptime, detección VM/Físico |
-| 📋 **Análisis de Logs** | auth.log + syslog, detección de fuerza bruta |
-| 📈 **Evolución** | Gráfico histórico del score de hardening |
-| 📄 **Reportes PDF** | Reporte profesional descargable (solo Admin) |
-| 📊 **Reportes Excel** | Exportación completa de checks (solo Admin) |
-| 🐳 **Docker** | Listo para desplegar con un solo comando |
-| 🌙 **Modo oscuro/claro** | Interfaz adaptable |
+| 🔐 Auth JWT | Login y registro con roles Admin / Viewer |
+| 📊 Panel DevSecOps | CVEs, Timeline, Comparativa, Recomendaciones |
+| 📈 Gráficos en tiempo real | Auth events, Score trend, Top IPs atacantes |
+| 🐧 Agente Linux | 22 checks — SSH, Firewall, Usuarios, Red, Servicios |
+| 🪟 Agente Windows | 25 checks — Contraseñas, RDP, SMB, Defender, UAC |
+| 🖥️ Inventario | CPU, RAM, Disco, Uptime, detección VM/Físico |
+| 📋 Análisis de Logs | auth.log + syslog, detección de fuerza bruta |
+| 🛡️ CVEs | Consulta NVD/NIST con fallback local |
+| 📄 Reportes PDF/Excel | Descargables (solo Admin) |
+| 🔍 Búsqueda | Filtrado de servidores en tiempo real |
+| 🐳 Docker | Listo para desplegar con un solo comando |
+| 🌐 Multi-servidor | Un backend centralizado para toda la red |
 
 ---
 
 ## 🖼️ Capturas
 
-### Panel de Login
-![Login](docs/login.png)
-
-### Dashboard Principal
-![Dashboard](docs/dashboard.png)
+| Login | Dashboard |
+|-------|-----------|
+| ![Login](docs/login.png) | ![Dashboard](docs/dashboard.png) |
 
 ---
 
@@ -52,17 +56,15 @@ ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, e
 
 ```
 ServerHardenPro/
-├── 📁 frontend/
-│   └── dashboard.html          # Panel web (HTML + CSS + JS vanilla)
-├── 📁 agents/
-│   ├── 📁 linux/
-│   │   └── agent_linux.py      # Agente Linux
-│   └── 📁 windows/
-│       └── agent_windows.py    # Agente Windows
-├── 📁 backend/
-│   ├── main.py                 # API REST + WebSockets (FastAPI)
-│   ├── database.py             # SQLite — auditorías, usuarios, logs
-│   ├── report_generator.py     # Generador PDF / Excel
+├── frontend/
+│   └── dashboard.html
+├── agents/
+│   ├── linux/agent_linux.py
+│   └── windows/agent_windows.py
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── report_generator.py
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── docker-compose.yml
@@ -78,26 +80,27 @@ ServerHardenPro/
 - Python 3.9+ (para los agentes)
 
 ### 1. Clonar el repositorio
-
 ```bash
 git clone https://github.com/N1x-afl/ServerHardenPro.git
 cd ServerHardenPro
 ```
 
 ### 2. Levantar el backend
-
 ```bash
 docker compose up -d --build
 ```
 
-El panel queda disponible en: **`http://TU_IP:8010`**
+### 3. Acceder al panel
+```
+http://TU_IP:8010
+```
 
-### 3. Primer acceso
+> 💡 El dashboard detecta automáticamente la IP del servidor — no requiere configuración adicional.
 
-Al abrir el panel por primera vez verás la pantalla de login.
-Hacé clic en **"REGISTRARSE"** — el primer usuario registrado es automáticamente **Admin**.
+### 4. Primer acceso
+Al abrir el panel hacé clic en **REGISTRARSE**.
 
-> ⚠️ El segundo usuario en adelante se registra como **Viewer** (solo lectura).
+> ⚠️ El **primer usuario registrado** es automáticamente **Admin**. Los siguientes son **Viewer**.
 
 ---
 
@@ -106,54 +109,40 @@ Hacé clic en **"REGISTRARSE"** — el primer usuario registrado es automáticam
 ### Agente Linux
 
 ```bash
-# En el mismo servidor donde corre el backend
+# En el mismo servidor del backend
 sudo python3 agents/linux/agent_linux.py
 
 # En un servidor diferente de la red
-export SHP_API=http://IP_DEL_BACKEND:8010/audit
-sudo -E python3 agents/linux/agent_linux.py
+SHP_API=http://IP_DEL_BACKEND:8010/audit sudo -E python3 agents/linux/agent_linux.py
 ```
 
-> ⚠️ Se recomienda ejecutar con `sudo` para que el agente pueda leer `/var/log/auth.log` y realizar todos los checks correctamente.
+> ⚠️ Ejecutar con `sudo` para acceder a `/var/log/auth.log`
 
 ### Agente Windows
 
 ```powershell
-# Ejecutar como Administrador en PowerShell
 $env:SHP_API = "http://IP_DEL_BACKEND:8010/audit"
 python agent_windows.py
 ```
 
-### Variable de entorno SHP_API
-
-Por defecto el agente apunta a `http://localhost:8010/audit`.
-Si el backend corre en otro servidor de la red, configurá la variable antes de ejecutar:
+### Múltiples servidores → un solo backend
 
 ```bash
-# Linux
-export SHP_API=http://192.168.1.100:8010/audit
-
-# Windows (PowerShell)
-$env:SHP_API = "http://192.168.1.100:8010/audit"
+# En cada servidor adicional
+SHP_API=http://192.168.1.100:8010/audit sudo -E python3 agent_linux.py
 ```
 
 ---
 
-## ⚙️ Variables de entorno del backend
+## ⚙️ Variables de entorno
 
 | Variable | Descripción | Default |
 |----------|-------------|---------|
-| `DB_PATH` | Ruta de la base de datos SQLite | `/app/data/shp_database.db` |
-| `SHP_JWT_SECRET` | Clave secreta para tokens JWT | `shp-change-this-secret` |
+| `DB_PATH` | Ruta SQLite | `/app/shp_database.db` |
+| `SHP_JWT_SECRET` | Clave JWT | `shp-change-this-secret` |
+| `SHP_API` | URL backend (agente) | `http://localhost:8010/audit` |
 
-> ⚠️ **Importante:** Cambiá `SHP_JWT_SECRET` por una clave segura antes de usar en producción.
-
-```yaml
-# docker-compose.yml
-environment:
-  - DB_PATH=/app/data/shp_database.db
-  - SHP_JWT_SECRET=tu-clave-super-secreta-aqui
-```
+> ⚠️ Cambiá `SHP_JWT_SECRET` antes de usar en producción.
 
 ---
 
@@ -162,12 +151,9 @@ environment:
 | Acción | Admin | Viewer |
 |--------|-------|--------|
 | Ver servidores y checks | ✅ | ✅ |
-| Ver inventario de hardware | ✅ | ✅ |
-| Ver análisis de logs | ✅ | ✅ |
-| Ver historial y evolución | ✅ | ✅ |
-| Descargar PDF | ✅ | ❌ |
-| Descargar Excel | ✅ | ❌ |
-| Gestionar usuarios | ✅ | ❌ |
+| Ver inventario / logs | ✅ | ✅ |
+| Panel DevSecOps | ✅ | ✅ |
+| Descargar PDF / Excel | ✅ | ❌ |
 
 ---
 
@@ -175,81 +161,68 @@ environment:
 
 | Método | Endpoint | Auth | Descripción |
 |--------|----------|------|-------------|
-| `GET` | `/health` | No | Healthcheck |
-| `GET` | `/auth/status` | No | Estado del sistema |
-| `POST` | `/auth/register` | No | Registrar usuario |
-| `POST` | `/auth/login` | No | Iniciar sesión |
-| `GET` | `/auth/me` | JWT | Perfil del usuario |
-| `POST` | `/audit` | No | Recibir auditoría de agente |
-| `POST` | `/logs` | No | Recibir análisis de logs |
-| `GET` | `/servers` | JWT | Listar servidores |
-| `GET` | `/servers/{hostname}` | JWT | Detalle + checks |
-| `GET` | `/servers/{hostname}/history` | JWT | Historial de scores |
-| `GET` | `/servers/{hostname}/inventory` | JWT | Inventario de hardware |
-| `GET` | `/servers/{hostname}/logs` | JWT | Análisis de logs |
-| `GET` | `/servers/{hostname}/report/pdf` | Admin | Reporte PDF |
-| `GET` | `/servers/{hostname}/report/excel` | Admin | Reporte Excel |
-| `GET` | `/summary` | JWT | Estadísticas globales |
-| `WS` | `/ws` | No | WebSocket tiempo real |
-| `GET` | `/docs` | No | Documentación Swagger |
+| GET | `/health` | No | Healthcheck |
+| POST | `/auth/register` | No | Registrar usuario |
+| POST | `/auth/login` | No | Iniciar sesión |
+| POST | `/audit` | No | Recibir auditoría |
+| POST | `/logs` | No | Recibir logs |
+| GET | `/servers` | JWT | Listar servidores |
+| GET | `/servers/{hostname}/inventory` | JWT | Inventario |
+| GET | `/servers/{hostname}/logs` | JWT | Logs |
+| GET | `/servers/{hostname}/report/pdf` | Admin | PDF |
+| GET | `/servers/{hostname}/report/excel` | Admin | Excel |
+| WS | `/ws` | No | WebSocket |
+| GET | `/docs` | No | Swagger |
 
 ---
 
-## ✅ Checks incluidos
+## 🛡️ Panel DevSecOps
 
-### 🐧 Linux (22 checks)
-
-| Categoría | Checks |
-|-----------|--------|
-| SSH | Root login, Password auth, Puerto 22, Max intentos, Protocolo SSH2 |
-| Firewall | UFW activo, Reglas iptables |
-| Usuarios | Contraseñas vacías, UID 0 duplicado, Sudo, Expiración |
-| Sistema | Updates pendientes, SUID, World-writable, Core dumps |
-| Auditoría | auditd, rsyslog |
-| Red | IP forwarding, ICMP redirects, SYN cookies |
-| Servicios | Telnet, FTP |
-
-### 🪟 Windows (25 checks)
-
-| Categoría | Checks |
-|-----------|--------|
-| Contraseñas | Complejidad, Longitud mínima, Expiración, Bloqueo de cuenta, Guest, Admin renombrado |
-| Firewall | Perfil Dominio, Privado, Público |
-| Actualizaciones | Servicio Windows Update, Updates pendientes |
-| RDP | Network Level Authentication, RDP innecesario |
-| SMB | SMBv1 deshabilitado, SMB Signing |
-| Auditoría | Logon events, Gestión de cuentas, Tamaño de logs |
-| Servicios | Telnet, Print Spooler (PrintNightmare), WinRM |
-| Antivirus | Defender activo, Firmas actualizadas |
-| Sistema | UAC habilitado, UAC prompt nivel |
+| Sección | Descripción |
+|---------|-------------|
+| **CVEs** | NVD/NIST en tiempo real + fallback local |
+| **Timeline** | Eventos de seguridad cronológicos |
+| **Comparativa** | Hardening entre servidores |
+| **Recomendaciones** | Comandos correctivos por check fallido |
 
 ---
 
-## 📋 Análisis de Logs
+## 🔄 Actualizar
 
-El agente analiza automáticamente al ejecutarse:
+```bash
+cd ~/ServerHardenPro
+git pull
+docker compose down && docker compose up -d --build
 
-- **`/var/log/auth.log`** — Intentos de login fallidos y exitosos
-- **`/var/log/syslog`** — Errores y eventos críticos del sistema
-
-El panel muestra:
-- Top 10 IPs con más intentos fallidos
-- Top 10 usuarios más atacados
-- 🚨 Alertas de fuerza bruta (≥10 intentos en 5 minutos desde la misma IP)
-- Errores críticos del sistema con timestamp
+# Solo frontend:
+git pull && docker compose restart
+```
 
 ---
 
-## 🖥️ Inventario de hardware
+## 🔧 Troubleshooting
 
-El agente detecta y reporta:
+Ver [TROUBLESHOOTING.md](TROUBLESHOOTING.md) para errores detallados.
 
-- **CPU** — Modelo, núcleos, threads, frecuencia
-- **RAM** — Total, usada, libre
-- **Disco** — Uso de la partición raíz
-- **Uptime** — Tiempo en línea en días y horas
-- **Kernel** — Versión del kernel
-- **VM/Físico** — Detecta VMware, KVM, VirtualBox, Xen, Hyper-V, QEMU
+**No conecta al backend:**
+```bash
+docker ps | grep shp_backend
+docker compose up -d
+```
+
+**Error 500 en /logs:**
+```bash
+docker compose down && docker compose up -d --build
+```
+
+**No puedo logearme:**
+```bash
+# En consola del browser (F12)
+localStorage.clear(); location.reload();
+```
+
+**Inventario vacío:**
+Verificar que `DB_PATH=/app/shp_database.db` en `docker-compose.yml`
 
 ---
 
@@ -257,53 +230,29 @@ El agente detecta y reporta:
 
 | Capa | Tecnología |
 |------|-----------|
-| Agente Linux | Python 3 + Bash |
-| Agente Windows | Python 3 + PowerShell |
-| Backend / API | FastAPI + Uvicorn |
-| Auth | JWT HS256 (implementación nativa sin librerías extra) |
-| Base de datos | SQLite |
-| Panel web | HTML5 + CSS3 + JavaScript vanilla |
+| Backend | FastAPI + Uvicorn |
+| Auth | JWT HS256 |
+| DB | SQLite |
+| Frontend | HTML5 + CSS3 + JS vanilla |
 | Gráficos | Chart.js |
-| Reportes | ReportLab (PDF) + OpenPyXL (Excel) |
+| Reportes | ReportLab + OpenPyXL |
 | Tiempo real | WebSockets |
-| Contenedores | Docker + Docker Compose |
-
----
-
-## 🔄 Actualizar desde GitHub
-
-```bash
-cd ~/ServerHardenPro
-git pull
-docker compose down
-docker compose up -d --build
-```
-
----
-
-## 🧪 Entorno de prueba recomendado
-
-Para testear sin servidores físicos:
-
-- **VM Linux:** Ubuntu 22.04 Server (512 MB RAM, 10 GB disco)
-- **VM Windows:** Windows Server 2019 Evaluation (2 GB RAM, 30 GB disco)
-- **Virtualización:** VirtualBox, VMware o Proxmox
-- **Red:** Modo "Red NAT" o "Red interna" para comunicación entre VMs
+| Contenedores | Docker + Compose |
 
 ---
 
 ## 🤝 Contribuciones
 
-¡Las contribuciones son bienvenidas! Abrí un Issue o Pull Request.
+1. Fork → branch → commit → PR
 
-Áreas donde podés contribuir:
-- Nuevos checks de hardening
-- Soporte para otras distros (RHEL, Alpine, Arch)
-- Agente para macOS
-- Traducciones (inglés, portugués)
+Áreas: nuevos checks, soporte RHEL/Alpine/macOS, traducciones.
 
 ---
 
 ## 📄 Licencia
 
 MIT © 2025 — ServerHardenPro
+
+---
+
+*// ServerHardenPro v0.5.0 — FastAPI + SQLite + WebSockets + Chart.js*
