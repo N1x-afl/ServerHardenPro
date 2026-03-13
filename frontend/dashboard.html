@@ -1335,47 +1335,6 @@ body::before {
   background: radial-gradient(ellipse at center, #0a0800 0%, #050608 60%, #000 100%) !important;
 }
 
-/* JARVIS voice indicator */
-#jarvis-indicator {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  display: none;
-  align-items: center;
-  gap: 8px;
-  background: rgba(10,8,0,0.9);
-  border: 1px solid var(--jarvis);
-  border-radius: 24px;
-  padding: 8px 16px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--jarvis2);
-  letter-spacing: 2px;
-  z-index: 9998;
-  box-shadow: 0 0 20px rgba(255,106,0,0.3);
-  animation: jarvis-fade-in 0.3s ease;
-}
-#jarvis-indicator.show { display: flex; }
-#jarvis-indicator .j-bars {
-  display: flex; gap: 2px; align-items: center;
-}
-#jarvis-indicator .j-bars span {
-  width: 3px;
-  background: var(--jarvis);
-  border-radius: 2px;
-  animation: j-bar-anim 0.5s ease-in-out infinite alternate;
-}
-#jarvis-indicator .j-bars span:nth-child(1) { height: 8px;  animation-delay: 0s; }
-#jarvis-indicator .j-bars span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
-#jarvis-indicator .j-bars span:nth-child(3) { height: 20px; animation-delay: 0.2s; }
-#jarvis-indicator .j-bars span:nth-child(4) { height: 14px; animation-delay: 0.3s; }
-#jarvis-indicator .j-bars span:nth-child(5) { height: 8px;  animation-delay: 0.4s; }
-@keyframes j-bar-anim {
-  from { transform: scaleY(0.4); opacity: 0.5; }
-  to   { transform: scaleY(1);   opacity: 1; }
-}
-@keyframes jarvis-fade-in {
-  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -2019,12 +1978,6 @@ function selectServer(hostname) {
   content.offsetHeight; // reflow
   content.style.animation = 'serverSwitch .35s cubic-bezier(.4,0,.2,1)';
   loadDetail(hostname);
-  // JARVIS — announce server selection
-  try {
-    const srvData = window._serverCache && window._serverCache[hostname];
-    const score = srvData ? (srvData.summary?.score || 0) : 0;
-    if (score > 0) JARVIS.serverSelected(hostname, score);
-  } catch(e) {}
   // Si la tab activa es historial o chart, cargar eso también
   const activeTab = document.querySelector('.tab-btn.active')?.id?.replace('tab-','');
   if (activeTab === 'history')   loadHistory(hostname);
@@ -2048,16 +2001,6 @@ async function loadDetail(hostname) {
 }
 function renderDetail(data) {
   document.getElementById('detail-title').textContent = `${data.server.hostname} — Resultado de Auditoría`;
-  // JARVIS critical alert
-  try {
-    const failCount = data.checks?.filter(c => c.status === 'FAIL').length || 0;
-    const score = data.summary?.score || 0;
-    if (failCount >= 5 && score < 60) {
-      setTimeout(() => JARVIS.criticalAlert(data.server.hostname, failCount), 2000);
-    } else if (score > 0) {
-      setTimeout(() => JARVIS.serverSelected(data.server.hostname, score), 500);
-    }
-  } catch(e) {}
   if (!data.checks?.length) {
     document.getElementById('checks-container').innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>SIN CHECKS</div>`;
     return;
@@ -2224,7 +2167,6 @@ function addEvent(text, color = 'var(--cyan)') {
 //  REPORTES
 // ─────────────────────────────────────────────
 async function exportPDF() {
-  JARVIS.exportReport('PDF');
   if (!currentServer) { toast('Seleccioná un servidor primero', 'warn'); return; }
   toast('Generando PDF...', 'info');
   try {
@@ -2237,7 +2179,6 @@ async function exportPDF() {
   } catch { toast('Error al generar PDF', 'warn'); }
 }
 async function exportExcel() {
-  JARVIS.exportReport('Excel');
   if (!currentServer) { toast('Seleccioná un servidor primero', 'warn'); return; }
   toast('Generando Excel...', 'info');
   try {
@@ -2632,7 +2573,6 @@ function switchView(view) {
 
 // DSO Tab switcher
 function dsoTab(tab) {
-  if (tab === 'cves') JARVIS.devsecops();
   document.querySelectorAll('.dso-tab-content').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.dso-nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('dso-' + tab).style.display = '';
@@ -2670,7 +2610,6 @@ const CVE_FALLBACK = {
 };
 
 async function loadCVEs() {
-  JARVIS.devsecops();
   const hostname = document.getElementById('dso-server-select').value;
   document.getElementById('cve-list').innerHTML = '<div class="loader"></div>';
   document.getElementById('cve-summary-row').innerHTML = '';
@@ -3158,88 +3097,7 @@ function authTab(tab) {
   document.getElementById('at-register').classList.toggle('active', tab === 'register');
 }
 
-// ══════════════════════════════════════════════════════
-//  J.A.R.V.I.S. VOICE SYSTEM — v12
-// ══════════════════════════════════════════════════════
-const JARVIS = {
-  _voice: null,
-  _ready: false,
 
-  init() {
-    if (!window.speechSynthesis) return;
-    const load = () => {
-      const voices = speechSynthesis.getVoices();
-      this._voice = voices.find(v =>
-        v.name.includes('Google UK English Male') ||
-        v.name.includes('Daniel') ||
-        v.name.includes('Microsoft David') ||
-        v.name.includes('Alex') ||
-        (v.lang && v.lang.startsWith('en') && !v.name.toLowerCase().includes('female') && !v.name.toLowerCase().includes('zira') && !v.name.toLowerCase().includes('samantha'))
-      ) || voices.find(v => v.lang && v.lang.startsWith('en')) || null;
-      this._ready = true;
-    };
-    if (speechSynthesis.getVoices().length === 0) {
-      speechSynthesis.addEventListener('voiceschanged', load, { once: true });
-    } else { load(); }
-  },
-
-  speak(text, onEnd) {
-    if (!window.speechSynthesis) return;
-    speechSynthesis.cancel();
-    const msg = new SpeechSynthesisUtterance();
-    msg.text = text; msg.lang = 'en-US';
-    msg.rate = 0.82; msg.pitch = 0.62; msg.volume = 1;
-    if (this._voice) msg.voice = this._voice;
-
-    // Show indicator
-    const ind = document.getElementById('jarvis-indicator');
-    const txt = document.getElementById('jarvis-text');
-    if (ind) { txt.textContent = text.length > 40 ? text.substring(0,40)+'...' : text; ind.classList.add('show'); }
-    msg.onend = () => {
-      if (ind) ind.classList.remove('show');
-      if (onEnd) onEnd();
-    };
-    msg.onerror = () => { if (ind) ind.classList.remove('show'); };
-    speechSynthesis.speak(msg);
-  },
-
-  welcome(username) {
-    const msgs = [
-      `Access granted. Welcome back, ${username}. All systems operational.`,
-      `Identity confirmed. Welcome, ${username}. Security audit platform online.`,
-      `Authentication successful. Good to see you again, ${username}. Jarvis ready.`,
-    ];
-    this.speak(msgs[Math.floor(Math.random() * msgs.length)]);
-  },
-
-  serverSelected(hostname, score) {
-    const level = score >= 80 ? 'secure' : score >= 60 ? 'moderate risk' : 'critical risk';
-    const msgs = [
-      `Analyzing server ${hostname}. Compliance score: ${score} percent. Status: ${level}.`,
-      `Server ${hostname} loaded. Hardening score is ${score} percent. ${score < 60 ? 'Immediate action recommended.' : 'Systems nominal.'}`,
-    ];
-    this.speak(msgs[Math.floor(Math.random() * msgs.length)]);
-  },
-
-  criticalAlert(hostname, failCount) {
-    this.speak(`Warning. Server ${hostname} has ${failCount} critical security failures. Immediate attention required.`);
-  },
-
-  exportReport(type) {
-    this.speak(`Generating ${type} security report. Stand by.`);
-  },
-
-  devsecops() {
-    this.speak(`Switching to DevSecOps analysis mode. Loading threat intelligence.`);
-  }
-};
-
-// Initialize on load
-JARVIS.init();
-
-function playWelcomeVoice(username) {
-  JARVIS.welcome(username);
-}
 
 async function doLogin() {
   const username = document.getElementById('l-user').value.trim();
@@ -3282,7 +3140,6 @@ function onAuthSuccess(token, user) {
   currentUser = user;
   localStorage.setItem('shp-token', token);
   localStorage.setItem('shp-user',  JSON.stringify(user));
-  playWelcomeVoice(user.username || user.name || 'operator');
   document.getElementById('auth-overlay').style.display = 'none';
   // Mostrar info usuario en header
   const roleLabel = user.role === 'admin' ? '👑 ADMIN' : '👁 VIEWER';
@@ -3625,12 +3482,6 @@ function renderInventory(inv, hostname) {
   </div><!-- /dso-layout -->
 </div><!-- /devsecops-panel -->
 
-
-<!-- JARVIS Voice Indicator -->
-<div id="jarvis-indicator">
-  <div class="j-bars">
-    <span></span><span></span><span></span><span></span><span></span>
-  </div>
   <span id="jarvis-text">J.A.R.V.I.S. ONLINE</span>
 </div>
 
