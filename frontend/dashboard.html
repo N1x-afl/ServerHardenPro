@@ -1150,7 +1150,7 @@ header {
 /* ══ CHARTS ═════════════════════════════════════════════════════════ */
 .charts-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
   margin-top: 16px;
 }
@@ -1427,6 +1427,44 @@ header {
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- CHARTS ROW — always visible below stat cards -->
+    <div class="charts-row" id="charts-row">
+
+      <!-- Auth Events Chart -->
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="dot" style="background:var(--red)"></div>Intentos de Login / Auth Events</div>
+          <span class="chart-badge" id="chart-fail-badge">Seleccioná un servidor</span>
+        </div>
+        <div style="padding:16px 20px 20px; height:180px">
+          <canvas id="authChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Score Trend Chart -->
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="dot" style="background:var(--cyan)"></div>Tendencia de Hardening / Score Trend</div>
+          <span class="chart-badge" id="chart-score-badge">Seleccioná un servidor</span>
+        </div>
+        <div style="padding:16px 20px 20px; height:180px">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Syslog Chart -->
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <div class="panel-title"><div class="dot" style="background:var(--yellow)"></div>Top IPs Atacantes / Syslog Errors</div>
+          <span class="chart-badge" id="chart-syslog-badge">Seleccioná un servidor</span>
+        </div>
+        <div style="padding:16px 20px 20px; height:180px">
+          <canvas id="syslogChart"></canvas>
+        </div>
+      </div>
+
     </div>
 
     <!-- BOTTOM -->
@@ -2138,14 +2176,18 @@ const mainContent = document.querySelector('.main-content') || document.querySel
 function initScrollTop() {
   const btn = document.getElementById('scroll-top-btn');
   if (!btn) return;
+  const content = document.querySelector('.content') || document.documentElement;
   const onScroll = () => {
-    btn.classList.toggle('visible', (window.scrollY || document.documentElement.scrollTop) > 200);
+    const scrolled = content.scrollTop || window.scrollY || document.documentElement.scrollTop;
+    btn.classList.toggle('visible', scrolled > 200);
   };
+  content.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('scroll', onScroll, { passive: true });
-  document.addEventListener('scroll', onScroll, { passive: true });
 }
 
 function scrollToTop() {
+  const content = document.querySelector('.content');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2185,9 +2227,7 @@ async function loadDashboardCharts(hostname) {
   const token = localStorage.getItem('shp-token');
   if (!hostname) return;
 
-  // Show chart panels
-  document.getElementById('charts-row').style.display = 'grid';
-  document.getElementById('syslog-chart-panel').style.display = 'block';
+  // Charts always visible
 
   try {
     // ── Fetch history for trend chart ──────────────────────────
