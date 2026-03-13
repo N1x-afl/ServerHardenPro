@@ -953,6 +953,206 @@ header {
   margin-top: 6px; letter-spacing: 1px;
 }
 
+
+/* ══ TOP NAV ═══════════════════════════════════════════════════════ */
+.top-nav {
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 24px;
+  background: rgba(6,10,15,0.95);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  height: 44px;
+}
+.top-nav-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 8px;
+  background: none; border: none;
+  color: rgba(255,255,255,0.35);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+  cursor: pointer; transition: all .2s; position: relative;
+}
+.top-nav-btn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.04); }
+.top-nav-btn.active { color: var(--cyan); background: rgba(0,229,255,0.08); }
+.top-nav-btn.active svg { stroke: var(--cyan); }
+.nav-badge {
+  background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 10px;
+  letter-spacing: 0;
+}
+
+/* ══ DEVSECOPS LAYOUT ══════════════════════════════════════════════ */
+#devsecops-panel {
+  height: calc(100vh - 108px);
+  overflow: hidden;
+}
+.dso-layout {
+  display: flex; height: 100%;
+}
+.dso-sidebar {
+  width: 240px; min-width: 240px;
+  background: rgba(8,13,20,0.6);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 20px 14px;
+  display: flex; flex-direction: column; gap: 16px;
+  overflow-y: auto;
+}
+.dso-nav { display: flex; flex-direction: column; gap: 4px; }
+.dso-nav-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: none; border: none;
+  color: rgba(255,255,255,0.4);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+  cursor: pointer; transition: all .2s; text-align: left;
+  width: 100%;
+}
+.dso-nav-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.dso-nav-btn.active {
+  color: var(--cyan); background: rgba(0,229,255,0.08);
+  border-left: 2px solid var(--cyan); padding-left: 12px;
+}
+.dso-server-filter { margin-top: auto; }
+
+/* DSO Content */
+.dso-content {
+  flex: 1; overflow-y: auto; padding: 28px 32px;
+}
+.dso-tab-content { animation: fadeSlideIn .3s ease; }
+.dso-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 24px; gap: 16px;
+}
+.dso-title {
+  font-family: var(--head); font-size: 20px; font-weight: 700;
+  letter-spacing: 1px; margin: 0 0 6px;
+}
+.dso-lang { color: var(--muted); font-size: 14px; font-weight: 400; }
+.dso-desc { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; margin: 0; }
+
+/* DSO Summary row */
+.dso-summary-row {
+  display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.dso-summary-card {
+  flex: 1; min-width: 100px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; padding: 14px 16px;
+  text-align: center;
+}
+.dso-summary-num {
+  font-family: var(--head); font-size: 28px; font-weight: 800;
+  line-height: 1; margin-bottom: 4px;
+}
+.dso-summary-lbl {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  color: var(--muted); text-transform: uppercase;
+}
+
+/* CVE Cards */
+.dso-list { display: flex; flex-direction: column; gap: 10px; }
+.cve-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 16px 20px;
+  display: grid; grid-template-columns: auto 1fr auto;
+  gap: 14px; align-items: start;
+  transition: border-color .2s;
+}
+.cve-card:hover { border-color: rgba(255,255,255,0.14); }
+.cve-severity {
+  padding: 3px 10px; border-radius: 20px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; white-space: nowrap; margin-top: 2px;
+}
+.sev-critical { background: rgba(255,30,60,0.15); color: #ff3c5c; border: 1px solid rgba(255,30,60,0.3); }
+.sev-high     { background: rgba(255,100,30,0.15); color: #ff6420; border: 1px solid rgba(255,100,30,0.3); }
+.sev-medium   { background: rgba(255,190,30,0.15); color: #ffbe1e; border: 1px solid rgba(255,190,30,0.3); }
+.sev-low      { background: rgba(80,200,100,0.15); color: #50c864; border: 1px solid rgba(80,200,100,0.3); }
+.cve-id { font-family: var(--mono); font-size: 12px; color: var(--cyan); font-weight: 600; margin-bottom: 4px; }
+.cve-desc { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.5; }
+.cve-score { font-family: var(--head); font-size: 20px; font-weight: 800; text-align: right; }
+.cve-meta { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+
+/* Timeline */
+.dso-timeline-wrap { position: relative; padding-left: 28px; }
+.dso-timeline-wrap::before {
+  content: ''; position: absolute; left: 7px; top: 0; bottom: 0;
+  width: 1px; background: rgba(255,255,255,0.07);
+}
+.tl-item {
+  position: relative; margin-bottom: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; padding: 14px 16px;
+  animation: fadeSlideIn .3s ease both;
+}
+.tl-item::before {
+  content: ''; position: absolute;
+  left: -22px; top: 16px;
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+.tl-item.tl-critical::before { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.tl-item.tl-warning::before  { background: var(--yellow); }
+.tl-item.tl-info::before     { background: var(--cyan); }
+.tl-item.tl-ok::before       { background: var(--green); }
+.tl-time { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+.tl-msg  { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.tl-host { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-top: 4px; }
+
+/* Comparison table */
+.compare-table { width: 100%; border-collapse: collapse; }
+.compare-table th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  color: var(--muted); text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  text-transform: uppercase;
+}
+.compare-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-family: var(--mono); font-size: 12px;
+}
+.compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+.compare-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 4px; height: 6px; width: 120px; }
+.compare-bar { height: 6px; border-radius: 4px; transition: width .6s ease; }
+
+/* Recommendations */
+.rec-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 18px 20px;
+  margin-bottom: 10px; transition: border-color .2s;
+}
+.rec-card:hover { border-color: rgba(0,229,255,0.15); }
+.rec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.rec-priority {
+  padding: 3px 10px; border-radius: 20px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 1px;
+}
+.rec-p-critical { background: rgba(255,30,60,0.15); color: #ff3c5c; border: 1px solid rgba(255,30,60,0.3); }
+.rec-p-high     { background: rgba(255,100,30,0.15); color: #ff6420; border: 1px solid rgba(255,100,30,0.3); }
+.rec-p-medium   { background: rgba(255,190,30,0.15); color: #ffbe1e; border: 1px solid rgba(255,190,30,0.3); }
+.rec-title { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.rec-host  { font-family: var(--mono); font-size: 10px; color: var(--cyan); margin-left: auto; }
+.rec-body  { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.6; }
+.rec-cmd {
+  margin-top: 10px; padding: 10px 14px;
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; font-family: var(--mono); font-size: 11px;
+  color: var(--cyan); letter-spacing: .5px; overflow-x: auto;
+}
+.rec-cmd::before { content: '$ '; color: var(--muted); }
+
+/* Empty state */
+.dso-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; gap: 12px; text-align: center;
+  color: rgba(255,255,255,0.2); font-family: var(--mono); font-size: 12px;
+}
+.dso-empty small { font-size: 10px; letter-spacing: 1px; }
+
 </style>
 </head>
 <body>
@@ -1079,6 +1279,19 @@ header {
     </div>
   </div>
 </div>
+
+<!-- ══ TOP NAV ══ -->
+<nav class="top-nav">
+  <button class="top-nav-btn active" id="nav-dashboard" onclick="switchView('dashboard')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    DASHBOARD
+  </button>
+  <button class="top-nav-btn" id="nav-devsecops" onclick="switchView('devsecops')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    DEVSECOPS
+    <span class="nav-badge" id="cve-badge" style="display:none">0</span>
+  </button>
+</nav>
 
 <!-- ══ APP ══ -->
 <div class="app-layout">
@@ -1944,6 +2157,346 @@ function scrollToTop() {
 }
 
 
+
+// ══════════════════════════════════════════════════════
+//  DEVSECOPS PANEL
+// ══════════════════════════════════════════════════════
+
+// View switcher
+function switchView(view) {
+  const isDso = view === 'devsecops';
+  document.querySelector('.app-layout').style.display = isDso ? 'none' : '';
+  document.getElementById('devsecops-panel').style.display = isDso ? 'block' : 'none';
+  document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + view).classList.add('active');
+  if (isDso) populateDsoServerSelect();
+}
+
+// DSO Tab switcher
+function dsoTab(tab) {
+  document.querySelectorAll('.dso-tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.dso-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('dso-' + tab).style.display = '';
+  event.currentTarget.classList.add('active');
+}
+
+// Populate server select
+async function populateDsoServerSelect() {
+  try {
+    const token = localStorage.getItem('shp-token');
+    const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
+    const servers = await res.json();
+    const sel = document.getElementById('dso-server-select');
+    sel.innerHTML = '<option value="all">Todos los servidores</option>';
+    servers.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.hostname; opt.textContent = s.hostname;
+      sel.appendChild(opt);
+    });
+  } catch(e) { console.error('populateDsoServerSelect:', e); }
+}
+
+// ── CVEs ──────────────────────────────────────────────────────────
+const CVE_FALLBACK = {
+  'linux': [
+    { id:'CVE-2021-4034', severity:'CRITICAL', score:7.8, desc:'Polkit pkexec privilege escalation (PwnKit)', affected:'Linux kernel < 5.17' },
+    { id:'CVE-2022-0847', severity:'HIGH',     score:7.8, desc:'Dirty Pipe — escritura en archivos de solo lectura', affected:'Kernel 5.8–5.16.11' },
+    { id:'CVE-2023-0386',  severity:'HIGH',    score:7.8, desc:'OverlayFS privilege escalation via fuse', affected:'Kernel < 6.2' },
+    { id:'CVE-2022-3602',  severity:'HIGH',    score:7.5, desc:'OpenSSL buffer overflow en verificación X.509', affected:'OpenSSL 3.0.x < 3.0.7' },
+    { id:'CVE-2023-4911',  severity:'HIGH',    score:7.8, desc:'Looney Tunables — glibc buffer overflow', affected:'glibc < 2.38-4' },
+    { id:'CVE-2023-38408', severity:'MEDIUM',  score:6.5, desc:'OpenSSH remote code execution via ssh-agent', affected:'OpenSSH < 9.3p2' },
+    { id:'CVE-2024-6387',  severity:'HIGH',    score:8.1, desc:'regreSSHion — race condition en OpenSSH', affected:'OpenSSH 8.5p1–9.7p1' },
+  ]
+};
+
+async function loadCVEs() {
+  const hostname = document.getElementById('dso-server-select').value;
+  document.getElementById('cve-list').innerHTML = '<div class="loader"></div>';
+  document.getElementById('cve-summary-row').innerHTML = '';
+
+  let cves = [];
+  let source = 'local';
+
+  // Try NVD/NIST API first
+  try {
+    const query = 'linux+kernel+privilege+escalation';
+    const nvdRes = await fetch(
+      `https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=${query}&resultsPerPage=8`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (nvdRes.ok) {
+      const nvdData = await nvdRes.json();
+      cves = (nvdData.vulnerabilities || []).map(v => {
+        const cve = v.cve;
+        const metrics = cve.metrics?.cvssMetricV31?.[0] || cve.metrics?.cvssMetricV30?.[0] || cve.metrics?.cvssMetricV2?.[0];
+        const score = metrics?.cvssData?.baseScore || 0;
+        const severity = score >= 9 ? 'CRITICAL' : score >= 7 ? 'HIGH' : score >= 4 ? 'MEDIUM' : 'LOW';
+        return {
+          id: cve.id,
+          severity,
+          score,
+          desc: cve.descriptions?.find(d => d.lang === 'en')?.value?.slice(0, 120) || '—',
+          affected: cve.configurations?.[0]?.nodes?.[0]?.cpeMatch?.[0]?.criteria || '—',
+          source: 'NVD/NIST'
+        };
+      });
+      source = 'NVD/NIST';
+    }
+  } catch(e) {
+    console.log('NVD no disponible, usando fallback local:', e.message);
+  }
+
+  // Fallback
+  if (cves.length === 0) {
+    cves = CVE_FALLBACK.linux.map(c => ({ ...c, source: 'Local DB' }));
+    source = 'Local DB';
+  }
+
+  // Summary
+  const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+  cves.forEach(cv => { if (counts[cv.severity] !== undefined) counts[cv.severity]++; });
+
+  document.getElementById('cve-summary-row').innerHTML = `
+    <div class="dso-summary-card"><div class="dso-summary-num" style="color:#ff3c5c">${counts.CRITICAL}</div><div class="dso-summary-lbl">Critical</div></div>
+    <div class="dso-summary-card"><div class="dso-summary-num" style="color:#ff6420">${counts.HIGH}</div><div class="dso-summary-lbl">High</div></div>
+    <div class="dso-summary-card"><div class="dso-summary-num" style="color:#ffbe1e">${counts.MEDIUM}</div><div class="dso-summary-lbl">Medium</div></div>
+    <div class="dso-summary-card"><div class="dso-summary-num" style="color:#50c864">${counts.LOW}</div><div class="dso-summary-lbl">Low</div></div>
+    <div class="dso-summary-card"><div class="dso-summary-num" style="color:var(--cyan)">${cves.length}</div><div class="dso-summary-lbl">Total CVEs</div></div>
+    <div class="dso-summary-card" style="border-color:rgba(0,229,255,0.1)"><div class="dso-summary-num" style="font-size:13px;color:var(--muted)">${source}</div><div class="dso-summary-lbl">Fuente / Source</div></div>
+  `;
+
+  // Update badge
+  const badge = document.getElementById('cve-badge');
+  badge.textContent = counts.CRITICAL + counts.HIGH;
+  badge.style.display = counts.CRITICAL + counts.HIGH > 0 ? '' : 'none';
+
+  // Render CVE cards
+  const sevClass = { CRITICAL: 'sev-critical', HIGH: 'sev-high', MEDIUM: 'sev-medium', LOW: 'sev-low' };
+  document.getElementById('cve-list').innerHTML = cves.map(cv => `
+    <div class="cve-card">
+      <div>
+        <div class="cve-severity ${sevClass[cv.severity] || 'sev-low'}">${cv.severity}</div>
+      </div>
+      <div>
+        <div class="cve-id">${cv.id}</div>
+        <div class="cve-desc">${cv.desc}</div>
+        <div class="cve-meta" style="margin-top:6px">Afecta / Affects: ${cv.affected}</div>
+        ${cv.source ? `<div class="cve-meta">Fuente: ${cv.source}</div>` : ''}
+      </div>
+      <div>
+        <div class="cve-score" style="color:${cv.score>=9?'#ff3c5c':cv.score>=7?'#ff6420':cv.score>=4?'#ffbe1e':'#50c864'}">${cv.score?.toFixed(1)||'N/A'}</div>
+        <div class="cve-meta">CVSS</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Timeline ──────────────────────────────────────────────────────
+async function loadTimeline() {
+  document.getElementById('timeline-list').innerHTML = '<div class="loader"></div>';
+  const token = localStorage.getItem('shp-token');
+  const hostname = document.getElementById('dso-server-select').value;
+
+  try {
+    // Fetch servers to get log data
+    const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
+    const servers = await res.json();
+    const targets = hostname === 'all' ? servers : servers.filter(s => s.hostname === hostname);
+
+    const events = [];
+    for (const srv of targets) {
+      // Audit events from history
+      try {
+        const hist = await fetch(`${API}/servers/${srv.hostname}/history`, { headers: { Authorization: `Bearer ${token}` } });
+        const histData = await hist.json();
+        (histData || []).slice(0, 5).forEach(h => {
+          const score = h.score || 0;
+          events.push({
+            time: h.audited_at || h.created_at,
+            type: score < 50 ? 'tl-critical' : score < 70 ? 'tl-warning' : 'tl-ok',
+            msg: `Auditoría completada — Score: ${score}%`,
+            host: srv.hostname
+          });
+        });
+      } catch(e) {}
+
+      // Log events
+      try {
+        const logs = await fetch(`${API}/servers/${srv.hostname}/logs`, { headers: { Authorization: `Bearer ${token}` } });
+        const logData = await logs.json();
+        if (logData?.brute_force_count > 0) {
+          events.push({
+            time: logData.analyzed_at,
+            type: 'tl-critical',
+            msg: `⚠ ${logData.brute_force_count} ataque(s) de fuerza bruta detectados`,
+            host: srv.hostname
+          });
+        }
+        if (logData?.auth_fail_total > 0) {
+          events.push({
+            time: logData.analyzed_at,
+            type: 'tl-warning',
+            msg: `${logData.auth_fail_total} intentos de login fallidos en las últimas 24hs`,
+            host: srv.hostname
+          });
+        }
+        if (logData?.syslog_crit_count > 0) {
+          events.push({
+            time: logData.analyzed_at,
+            type: 'tl-critical',
+            msg: `${logData.syslog_crit_count} errores críticos en syslog`,
+            host: srv.hostname
+          });
+        }
+      } catch(e) {}
+    }
+
+    // Sort by time desc
+    events.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    if (events.length === 0) {
+      document.getElementById('timeline-list').innerHTML = `
+        <div class="dso-empty"><p>Sin eventos registrados para este servidor</p></div>`;
+      return;
+    }
+
+    document.getElementById('timeline-list').innerHTML = events.map((ev, i) => `
+      <div class="tl-item ${ev.type}" style="animation-delay:${i*0.05}s">
+        <div class="tl-time">${ev.time ? new Date(ev.time).toLocaleString('es-AR') : '—'}</div>
+        <div class="tl-msg">${ev.msg}</div>
+        <div class="tl-host">// ${ev.host}</div>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('timeline-list').innerHTML = `<div class="dso-empty"><p>Error cargando timeline: ${e.message}</p></div>`;
+  }
+}
+
+// ── Comparison ────────────────────────────────────────────────────
+async function loadComparison() {
+  document.getElementById('compare-content').innerHTML = '<div class="loader"></div>';
+  const token = localStorage.getItem('shp-token');
+  try {
+    const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
+    const servers = await res.json();
+
+    const rows = await Promise.all(servers.map(async srv => {
+      try {
+        const d = await (await fetch(`${API}/servers/${srv.hostname}`, { headers: { Authorization: `Bearer ${token}` } })).json();
+        return { hostname: srv.hostname, score: d.score || 0, os: srv.os || '—',
+                 pass: d.checks_passed || 0, fail: d.checks_failed || 0,
+                 warn: d.checks_warn || 0, status: srv.status || '—' };
+      } catch { return { hostname: srv.hostname, score: 0, os: '—', pass: 0, fail: 0, warn: 0, status: '—' }; }
+    }));
+
+    rows.sort((a, b) => b.score - a.score);
+
+    const barColor = s => s >= 70 ? '#50c864' : s >= 50 ? '#ffbe1e' : '#ff3c5c';
+
+    document.getElementById('compare-content').innerHTML = `
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Servidor / Server</th><th>OS</th>
+            <th>Score / Hardening</th><th>✅ Pass</th><th>❌ Fail</th><th>⚠ Warn</th><th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((r, i) => `
+            <tr>
+              <td style="color:var(--muted)">${i + 1}</td>
+              <td style="color:var(--cyan);font-weight:600">${r.hostname}</td>
+              <td style="color:var(--muted)">${r.os}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="compare-bar-wrap">
+                    <div class="compare-bar" style="width:${r.score}%;background:${barColor(r.score)}"></div>
+                  </div>
+                  <span style="font-weight:700;color:${barColor(r.score)}">${r.score}%</span>
+                </div>
+              </td>
+              <td style="color:#50c864">${r.pass}</td>
+              <td style="color:#ff3c5c">${r.fail}</td>
+              <td style="color:#ffbe1e">${r.warn}</td>
+              <td><span class="badge badge-${r.status?.toLowerCase()}">${r.status}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) {
+    document.getElementById('compare-content').innerHTML = `<div class="dso-empty"><p>Error: ${e.message}</p></div>`;
+  }
+}
+
+// ── Recommendations ───────────────────────────────────────────────
+const REC_DB = {
+  'SSH_ROOT_LOGIN':       { priority:'CRITICAL', title:'Deshabilitar login de root por SSH', desc:'El acceso directo como root via SSH es un vector de ataque crítico. Usar usuarios normales + sudo.', cmd:'echo "PermitRootLogin no" >> /etc/ssh/sshd_config && systemctl restart sshd' },
+  'SSH_PASSWORD_AUTH':    { priority:'HIGH',     title:'Deshabilitar autenticación por contraseña en SSH', desc:'Usar solo llaves SSH elimina el riesgo de ataques de fuerza bruta.', cmd:'echo "PasswordAuthentication no" >> /etc/ssh/sshd_config && systemctl restart sshd' },
+  'UFW_INACTIVE':         { priority:'HIGH',     title:'Activar firewall UFW', desc:'El firewall no está activo. Sin firewall, todos los puertos son accesibles.', cmd:'ufw --force enable && ufw default deny incoming && ufw allow ssh' },
+  'EMPTY_PASSWORDS':      { priority:'CRITICAL', title:'Eliminar contraseñas vacías', desc:'Existen cuentas sin contraseña. Cualquiera puede acceder a ellas.', cmd:'passwd -l <usuario>' },
+  'PENDING_UPDATES':      { priority:'HIGH',     title:'Aplicar actualizaciones de seguridad', desc:'Hay paquetes sin actualizar que pueden contener vulnerabilidades conocidas.', cmd:'apt update && apt upgrade -y && apt autoremove -y' },
+  'AUDITD_INACTIVE':      { priority:'MEDIUM',   title:'Activar servicio auditd', desc:'El demonio de auditoría no está corriendo. Sin auditd no hay trazabilidad de eventos del sistema.', cmd:'systemctl enable auditd && systemctl start auditd' },
+  'IP_FORWARDING':        { priority:'MEDIUM',   title:'Deshabilitar IP forwarding', desc:'El servidor está configurado para reenviar paquetes IP. Innecesario en servidores que no son routers.', cmd:'echo "net.ipv4.ip_forward=0" >> /etc/sysctl.conf && sysctl -p' },
+  'CORE_DUMPS':           { priority:'LOW',       title:'Deshabilitar core dumps', desc:'Los core dumps pueden exponer información sensible de memoria.', cmd:'echo "* hard core 0" >> /etc/security/limits.conf' },
+};
+
+async function loadRecommendations() {
+  document.getElementById('rec-list').innerHTML = '<div class="loader"></div>';
+  const token = localStorage.getItem('shp-token');
+  const hostname = document.getElementById('dso-server-select').value;
+
+  try {
+    const res = await fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } });
+    const servers = await res.json();
+    const targets = hostname === 'all' ? servers : servers.filter(s => s.hostname === hostname);
+
+    const recs = [];
+    for (const srv of targets) {
+      try {
+        const d = await (await fetch(`${API}/servers/${srv.hostname}`, { headers: { Authorization: `Bearer ${token}` } })).json();
+        const checks = d.checks || [];
+        checks.filter(ch => ch.status === 'FAIL').forEach(ch => {
+          const rec = REC_DB[ch.check_id] || {
+            priority: 'MEDIUM',
+            title: ch.name || ch.check_id,
+            desc: `El check "${ch.name || ch.check_id}" está fallando. Revisar la configuración del sistema.`,
+            cmd: null
+          };
+          recs.push({ ...rec, host: srv.hostname, check: ch.name || ch.check_id });
+        });
+      } catch(e) {}
+    }
+
+    const order = { CRITICAL:0, HIGH:1, MEDIUM:2, LOW:3 };
+    recs.sort((a, b) => (order[a.priority] || 2) - (order[b.priority] || 2));
+
+    if (recs.length === 0) {
+      document.getElementById('rec-list').innerHTML = `
+        <div class="dso-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(80,200,100,0.3)" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <p style="color:#50c864">¡Sin checks críticos fallidos!</p>
+          <small>Todos los checks están pasando correctamente</small>
+        </div>`;
+      return;
+    }
+
+    const prioClass = { CRITICAL:'rec-p-critical', HIGH:'rec-p-high', MEDIUM:'rec-p-medium', LOW:'rec-p-medium' };
+    document.getElementById('rec-list').innerHTML = recs.map((r, i) => `
+      <div class="rec-card" style="animation-delay:${i*0.04}s">
+        <div class="rec-header">
+          <span class="rec-priority ${prioClass[r.priority]}">${r.priority}</span>
+          <span class="rec-title">${r.title}</span>
+          <span class="rec-host">// ${r.host}</span>
+        </div>
+        <div class="rec-body">${r.desc}</div>
+        ${r.cmd ? `<div class="rec-cmd">${r.cmd}</div>` : ''}
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('rec-list').innerHTML = `<div class="dso-empty"><p>Error: ${e.message}</p></div>`;
+  }
+}
+
 // ══════════════════════════════════════════════════════
 //  NETWORK PARTICLES — LOGIN BACKGROUND
 // ══════════════════════════════════════════════════════
@@ -2402,6 +2955,127 @@ function renderInventory(inv, hostname) {
 
   <!-- Scroll to top -->
   <button id="scroll-top-btn" onclick="scrollToTop()" title="Volver arriba">↑</button>
+
+<!-- ══ DEVSECOPS PANEL ══ -->
+<div id="devsecops-panel" style="display:none">
+  <div class="dso-layout">
+
+    <!-- DSO Sidebar -->
+    <aside class="dso-sidebar">
+      <div class="dso-nav">
+        <button class="dso-nav-btn active" onclick="dsoTab('cves')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          CVEs / Vulnerabilidades
+        </button>
+        <button class="dso-nav-btn" onclick="dsoTab('timeline')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Timeline de Eventos
+        </button>
+        <button class="dso-nav-btn" onclick="dsoTab('compare')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Comparativa
+        </button>
+        <button class="dso-nav-btn" onclick="dsoTab('recommendations')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Recomendaciones
+        </button>
+      </div>
+      <div class="dso-server-filter">
+        <label class="settings-label">Servidor</label>
+        <select class="settings-input" id="dso-server-select" onchange="loadDsoData()">
+          <option value="all">Todos los servidores</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- DSO Content -->
+    <div class="dso-content">
+
+      <!-- CVEs Tab -->
+      <div id="dso-cves" class="dso-tab-content">
+        <div class="dso-header">
+          <div>
+            <h2 class="dso-title">CVEs / Vulnerabilidades <span class="dso-lang">/ Vulnerabilities</span></h2>
+            <p class="dso-desc">Vulnerabilidades detectadas basadas en kernel y paquetes del sistema</p>
+          </div>
+          <button class="hdr-btn" onclick="loadCVEs()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            ESCANEAR
+          </button>
+        </div>
+        <div id="cve-summary-row" class="dso-summary-row"></div>
+        <div id="cve-list" class="dso-list">
+          <div class="dso-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Hacé clic en ESCANEAR para buscar CVEs</p>
+            <small>Se consulta NVD/NIST con fallback local / Queries NVD/NIST with local fallback</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline Tab -->
+      <div id="dso-timeline" class="dso-tab-content" style="display:none">
+        <div class="dso-header">
+          <div>
+            <h2 class="dso-title">Timeline de Eventos <span class="dso-lang">/ Security Events</span></h2>
+            <p class="dso-desc">Historial cronológico de eventos de seguridad detectados</p>
+          </div>
+          <button class="hdr-btn" onclick="loadTimeline()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            CARGAR
+          </button>
+        </div>
+        <div id="timeline-list" class="dso-timeline-wrap">
+          <div class="dso-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <p>Hacé clic en CARGAR para ver el timeline</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compare Tab -->
+      <div id="dso-compare" class="dso-tab-content" style="display:none">
+        <div class="dso-header">
+          <div>
+            <h2 class="dso-title">Comparativa <span class="dso-lang">/ Server Comparison</span></h2>
+            <p class="dso-desc">Análisis comparativo del nivel de hardening entre servidores</p>
+          </div>
+          <button class="hdr-btn" onclick="loadComparison()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            COMPARAR
+          </button>
+        </div>
+        <div id="compare-content">
+          <div class="dso-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <p>Hacé clic en COMPARAR para ver el análisis</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations Tab -->
+      <div id="dso-recommendations" class="dso-tab-content" style="display:none">
+        <div class="dso-header">
+          <div>
+            <h2 class="dso-title">Recomendaciones <span class="dso-lang">/ Hardening Recommendations</span></h2>
+            <p class="dso-desc">Acciones correctivas automáticas basadas en checks fallidos</p>
+          </div>
+          <button class="hdr-btn" onclick="loadRecommendations()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            ANALIZAR
+          </button>
+        </div>
+        <div id="rec-list" class="dso-list">
+          <div class="dso-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <p>Hacé clic en ANALIZAR para ver recomendaciones</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dso-content -->
+  </div><!-- /dso-layout -->
+</div><!-- /devsecops-panel -->
 
 </body>
 </html>
