@@ -1515,12 +1515,7 @@ function updateChartTheme() {
 }
 
 // Restaurar tema guardado
-const savedTheme = localStorage.getItem('shp-theme') || 'dark';
-document.documentElement.setAttribute('data-theme', savedTheme);
-if (savedTheme === 'light') {
-  document.getElementById('theme-icon').textContent  = '🌙';
-  document.getElementById('theme-label').textContent = 'MODO OSCURO';
-}
+const savedTheme = document.documentElement.setAttribute('data-theme', 'dark');
 
 // ─────────────────────────────────────────────
 //  LOGOS SVG INLINE
