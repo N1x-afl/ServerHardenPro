@@ -533,7 +533,6 @@ body.light-mode {
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-<<<<<<< HEAD
   display: flex;
   align-items: center;
   justify-content: center;
@@ -543,14 +542,6 @@ body.light-mode {
   transition: opacity .3s ease, transform .3s ease;
   z-index: 9999;
   display: none;
-=======
-  display: none;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(0,229,255,0.35);
-  transition: transform .2s ease, box-shadow .2s ease;
-  z-index: 9999;
->>>>>>> 96e18132c2d00cae71139d6f4d6a4ecbd3aa207b
 }
 #scroll-top-btn.visible {
   display: flex !important;
@@ -931,17 +922,12 @@ body.light-mode {
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  CONFIG
-// ══════════════════════════════════════════════════════════════════
-// ── Backend URL — usa localStorage si fue configurado manualmente ──
-function getBackendURL() {
-  const saved = localStorage.getItem('shp-backend-url');
-  if (saved) return saved.replace(/\/$/, '');
-  return `http://${window.location.hostname}:8010`;
-}
-let API    = getBackendURL();
-let WS_URL = API.replace('http', 'ws') + '/ws';
+// ─────────────────────────────────────────────
+// ── Backend URL — siempre usa la IP del servidor actual ──
+const API    = `http://${window.location.hostname}:8010`;
+const WS_URL = `ws://${window.location.hostname}:8010/ws`;
 let currentServer = null;
 let scoreChart = null;
 let ws = null;
@@ -970,9 +956,9 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  MODO CLARO / OSCURO
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 function toggleTheme() {
   const html  = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
@@ -1003,9 +989,9 @@ if (savedTheme === 'light') {
   document.getElementById('theme-label').textContent = 'MODO OSCURO';
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  LOGOS SVG INLINE
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 const OS_LOGOS = {
   ubuntu: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#E95420"/><circle cx="12" cy="4.5" r="2" fill="white"/><circle cx="19.1" cy="16.5" r="2" fill="white"/><circle cx="4.9" cy="16.5" r="2" fill="white"/><circle cx="12" cy="12" r="3.5" fill="none" stroke="white" stroke-width="1.5"/><line x1="12" y1="6.5" x2="12" y2="8.5" stroke="white" stroke-width="1.5"/><line x1="17.4" y1="15" x2="15.6" y2="14" stroke="white" stroke-width="1.5"/><line x1="6.6" y1="15" x2="8.4" y2="14" stroke="white" stroke-width="1.5"/></svg>`,
   debian: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#A80030"/><path d="M12.5 7c-2.2 0-3.8 1.6-3.8 4 0 2 1.4 3.3 3.4 3.3.6 0 1.1-.2 1.5-.5v.5c0 1.3-.7 1.8-1.7 1.8-.9 0-1.6-.5-1.7-1.4H8c.1 1.8 1.4 2.9 3.3 2.9 2 0 3.5-1.2 3.5-3.8V9.5C14.8 8 13.8 7 12.5 7zm.3 5.4c-.7 0-1.5-.5-1.5-1.9 0-1.3.7-1.8 1.5-1.8s1.5.5 1.5 1.8-.8 1.9-1.5 1.9z" fill="white"/></svg>`,
@@ -1039,9 +1025,9 @@ function getOsLogo(os = '', platform = '') {
   return OS_LOGOS.linux;
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  TABS
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 function switchTab(tab) {
   ['checks','history','chart','inventory','logs'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
@@ -1053,9 +1039,9 @@ function switchTab(tab) {
   if (tab === 'logs'      && currentServer) loadLogs(currentServer);
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  TOAST
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 function toast(msg, type = 'info', duration = 4000) {
   const t = document.createElement('div');
   t.className = `toast-item ${type}`;
@@ -1064,9 +1050,9 @@ function toast(msg, type = 'info', duration = 4000) {
   setTimeout(() => t.remove(), duration);
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  CONTADOR ANIMADO
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 function animateCount(el, target, duration = 600) {
   const start = parseInt(el.textContent) || 0;
   if (start === target) return;
@@ -1083,9 +1069,9 @@ function animateCount(el, target, duration = 600) {
   }, duration / steps);
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  WEBSOCKET
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 function connectWS() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
@@ -1130,9 +1116,9 @@ function connectWS() {
   };
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  SERVIDORES
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function loadServers() {
   try {
     const res  = await fetch(`${API}/servers`);
@@ -1176,9 +1162,9 @@ function renderServers(servers) {
   }).join('');
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  RESUMEN
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function loadSummary() {
   try { renderSummary(await (await fetch(`${API}/summary`)).json()); } catch {}
 }
@@ -1215,9 +1201,9 @@ function renderSummary(data) {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  SELECCIONAR SERVIDOR — con animación
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 function selectServer(hostname) {
   currentServer = hostname;
   document.querySelectorAll('.server-card').forEach(c => {
@@ -1237,9 +1223,9 @@ function selectServer(hostname) {
   if (activeTab === 'logs')      loadLogs(hostname);
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  DETALLE / CHECKS
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function loadDetail(hostname) {
   document.getElementById('detail-title').textContent = `${hostname} — cargando...`;
   document.getElementById('checks-container').innerHTML = '<div class="loader"></div>';
@@ -1290,9 +1276,9 @@ function renderCategories(cats) {
   }).join('');
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  HISTORIAL DE AUDITORÍAS
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function loadHistory(hostname) {
   document.getElementById('history-container').innerHTML = '<div class="loader"></div>';
   try {
@@ -1333,9 +1319,9 @@ function renderHistory(data, hostname) {
     </table>`;
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  GRÁFICO DE EVOLUCIÓN
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function loadChart(hostname) {
   document.getElementById('chart-empty').style.display = 'none';
   try {
@@ -1399,9 +1385,9 @@ async function loadChart(hostname) {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  EVENTOS EN VIVO
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 function addEvent(text, color = 'var(--cyan)') {
   const list = document.getElementById('event-list');
   const now  = new Date().toLocaleTimeString('es-AR', { hour12: false });
@@ -1414,9 +1400,9 @@ function addEvent(text, color = 'var(--cyan)') {
   while (list.children.length > 20) list.lastChild.remove();
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  REPORTES
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function exportPDF() {
   if (!currentServer) { toast('Seleccioná un servidor primero', 'warn'); return; }
   toast('Generando PDF...', 'info');
@@ -1443,9 +1429,9 @@ async function exportExcel() {
 }
 
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  LOGS
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function loadLogs(hostname) {
   document.getElementById('logs-container').innerHTML = '<div class="loader"></div>';
   try {
@@ -1595,27 +1581,18 @@ function renderLogs(data, hostname) {
 }
 
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  SCROLL TO TOP
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.documentElement;
 
 // Scroll to top — escuchar en window y en .content
 function initScrollTop() {
   const btn = document.getElementById('scroll-top-btn');
   if (!btn) return;
-<<<<<<< HEAD
   const onScroll = () => {
     btn.classList.toggle('visible', (window.scrollY || document.documentElement.scrollTop) > 200);
   };
-=======
-
-  const onScroll = () => {
-    const y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    btn.classList.toggle('visible', y > 200);
-  };
-
->>>>>>> 96e18132c2d00cae71139d6f4d6a4ecbd3aa207b
   window.addEventListener('scroll', onScroll, { passive: true });
   document.addEventListener('scroll', onScroll, { passive: true });
 }
@@ -1623,15 +1600,11 @@ function initScrollTop() {
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-<<<<<<< HEAD
-=======
-  document.body.scrollTo({ top: 0, behavior: 'smooth' });
->>>>>>> 96e18132c2d00cae71139d6f4d6a4ecbd3aa207b
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  SIDEBAR — SLIDE + FADE
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 let sidebarHidden = false; // Siempre visible al cargar
 
 function initSidebar() {
@@ -1665,13 +1638,13 @@ function applySidebarState(animate) {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  INIT
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  AUTH
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 let currentUser = null;
 let authToken   = null;
 
@@ -1768,29 +1741,22 @@ function tryRestoreSession() {
     } catch {}
   }
   document.getElementById('auth-overlay').style.display = 'flex';
-  // Intentar detectar si el backend es accesible
+  // Verificar conexión al backend
   checkBackendConnection();
 }
 
 async function checkBackendConnection() {
   try {
     await fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) });
-    document.getElementById('backend-status').style.display = 'none';
+    const el = document.getElementById('backend-status');
+    if (el) el.style.display = 'none';
   } catch {
     const el = document.getElementById('backend-status');
     if (el) {
       el.style.display = 'block';
       el.innerHTML = `⚠ No se puede conectar al backend en <b>${API}</b><br>
-        <small>¿Otra IP? <a href="#" onclick="changeBackendURL()" style="color:var(--cyan)">Configurar URL</a></small>`;
+        <small>Verificá que Docker esté corriendo: <code>docker compose up -d</code></small>`;
     }
-  }
-}
-
-function changeBackendURL() {
-  const url = prompt('URL del backend (ej: http://192.168.1.100:8010):', API);
-  if (url && url.startsWith('http')) {
-    localStorage.setItem('shp-backend-url', url.replace(/\/$/, ''));
-    location.reload();
   }
 }
 
@@ -1804,9 +1770,9 @@ window.fetch = async (url, opts = {}) => {
   return _origFetch(url, opts);
 };
 
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 //  INVENTARIO
-// ══════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
 async function loadInventory(hostname) {
   document.getElementById('inventory-container').innerHTML = '<div class="loader"></div>';
   try {
