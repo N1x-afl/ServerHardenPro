@@ -757,6 +757,202 @@ body.light-mode {
   transition: all .4s cubic-bezier(.4,0,.2,1);
 }
 
+
+/* ══ HEADER REDESIGN v11 ═══════════════════════════════════════════ */
+header {
+  display: flex; align-items: center;
+  padding: 0 24px;
+  height: 64px;
+  background: rgba(8,13,20,0.92);
+  border-bottom: 1px solid rgba(0,229,255,0.1);
+  backdrop-filter: blur(16px);
+  position: sticky; top: 0; z-index: 100;
+  gap: 16px;
+}
+.logo { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.logo-icon-wrap {
+  width: 40px; height: 40px;
+  background: rgba(0,229,255,0.1);
+  border: 1px solid rgba(0,229,255,0.3);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 20px rgba(0,229,255,0.15);
+}
+.logo-main { font-family: var(--head); font-weight: 800; font-size: 17px; letter-spacing: 1px; display: block; }
+.logo-main em { color: var(--cyan); font-style: normal; }
+.logo-sub { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 3px; display: block; margin-top: 1px; }
+
+/* Search */
+.header-center { flex: 1; display: flex; justify-content: center; }
+.header-search {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 8px 16px;
+  width: 280px; transition: all .2s;
+}
+.header-search:focus-within {
+  border-color: rgba(0,229,255,0.3);
+  background: rgba(0,229,255,0.04);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.06);
+}
+.search-icon { color: var(--muted); font-size: 16px; }
+.header-search input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-family: var(--mono); font-size: 12px;
+  width: 100%; letter-spacing: 1px;
+}
+.header-search input::placeholder { color: rgba(255,255,255,0.2); }
+
+/* Header buttons */
+.hdr-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--muted); font-family: var(--mono); font-size: 10px;
+  letter-spacing: 1.5px; cursor: pointer; transition: all .2s;
+  white-space: nowrap;
+}
+.hdr-btn:hover {
+  background: rgba(0,229,255,0.08);
+  border-color: rgba(0,229,255,0.25);
+  color: var(--cyan);
+}
+.hdr-btn-settings { padding: 7px 10px; }
+.hdr-btn svg { flex-shrink: 0; }
+
+/* ══ STAT CARDS v11 ═════════════════════════════════════════════════ */
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.stat-card {
+  background: rgba(13,20,30,0.8);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 20px 22px;
+  position: relative; overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+  cursor: default;
+}
+.stat-card:hover { transform: translateY(-4px); }
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);
+  opacity: 0; transition: opacity .3s;
+}
+.stat-card:hover::before { opacity: 1; }
+.stat-card::after {
+  content: ''; position: absolute;
+  bottom: 0; left: 0; right: 0; height: 2px;
+  border-radius: 0 0 14px 14px;
+}
+.stat-card.s-total::after { background: linear-gradient(90deg,var(--cyan),transparent); }
+.stat-card.s-pass::after  { background: linear-gradient(90deg,var(--green),transparent); }
+.stat-card.s-fail::after  { background: linear-gradient(90deg,var(--red),transparent); }
+.stat-card.s-warn::after  { background: linear-gradient(90deg,var(--yellow),transparent); }
+/* Stat icon background */
+.stat-card .stat-icon-bg {
+  position: absolute; right: 16px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 42px; opacity: .06;
+  pointer-events: none;
+}
+.stat-num {
+  font-family: var(--head); font-size: 42px; font-weight: 900;
+  line-height: 1; margin: 4px 0 6px;
+  background: linear-gradient(135deg, currentColor, rgba(255,255,255,0.7));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-label {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 2px; color: var(--muted); text-transform: uppercase;
+}
+/* Animated counter */
+@keyframes countUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.stat-num { animation: countUp .5s ease both; }
+
+/* ══ SIDEBAR v11 ════════════════════════════════════════════════════ */
+.server-card {
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer; transition: all .25s;
+  position: relative; overflow: hidden;
+}
+.server-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--cyan); opacity: 0;
+  transition: opacity .2s;
+}
+.server-card:hover::before,
+.server-card.active::before { opacity: 1; }
+.server-card.active {
+  border-color: rgba(0,229,255,0.2);
+  background: rgba(0,229,255,0.05);
+}
+
+/* Settings modal */
+#settings-modal {
+  display: none;
+  position: fixed; inset: 0; z-index: 9998;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  align-items: center; justify-content: center;
+}
+#settings-modal.open { display: flex; }
+.settings-box {
+  background: rgba(10,16,24,0.95);
+  border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 18px; padding: 36px;
+  width: 480px; max-width: 90vw;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  animation: authAppear .3s ease;
+}
+.settings-title {
+  font-family: var(--head); font-size: 18px; font-weight: 700;
+  letter-spacing: 2px; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.settings-close {
+  background: none; border: none; color: var(--muted);
+  font-size: 20px; cursor: pointer; padding: 4px 8px;
+  border-radius: 6px; transition: all .2s;
+}
+.settings-close:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+.settings-row {
+  margin-bottom: 20px;
+}
+.settings-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 8px; display: block;
+}
+.settings-input {
+  width: 100%; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 11px 14px;
+  color: var(--text); font-family: var(--mono); font-size: 12px;
+  outline: none; transition: all .2s; box-sizing: border-box;
+}
+.settings-input:focus {
+  border-color: rgba(0,229,255,0.4);
+  background: rgba(0,229,255,0.04);
+}
+.settings-save {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, var(--cyan), #0097b2);
+  border: none; border-radius: 8px;
+  color: #060a0f; font-family: var(--head); font-weight: 700;
+  font-size: 12px; letter-spacing: 2px; cursor: pointer;
+  margin-top: 8px; transition: all .2s;
+}
+.settings-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,229,255,0.3); }
+.settings-info {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  margin-top: 6px; letter-spacing: 1px;
+}
+
 </style>
 </head>
 <body>
@@ -764,20 +960,40 @@ body.light-mode {
 <!-- ══ HEADER ══ -->
 <header>
   <div class="logo">
-    <div class="logo-icon">🛡️</div>
+    <div class="logo-icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+        <path d="M12 2L3 6.5V11C3 15.55 6.84 19.74 12 21C17.16 19.74 21 15.55 21 11V6.5L12 2Z"
+          fill="rgba(0,229,255,0.15)" stroke="rgba(0,229,255,0.9)" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M9 12L11 14L15 10" stroke="rgba(0,229,255,1)" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
     <div class="logo-text">
       <span class="logo-main">Server<em>Harden</em>Pro</span>
       <span class="logo-sub">// SECURITY AUDIT PLATFORM</span>
     </div>
   </div>
+  <div class="header-center">
+    <div class="header-search">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="header-search" placeholder="Buscar servidor..." onkeyup="filterServers(this.value)"/>
+    </div>
+  </div>
   <div class="header-right">
-    <button class="theme-btn" onclick="refreshAll()" id="refresh-btn">
-      <span>🔄</span>
+    <button class="hdr-btn" onclick="refreshAll()" id="refresh-btn" title="Actualizar datos">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+      </svg>
       <span>ACTUALIZAR</span>
     </button>
-    <button class="theme-btn" onclick="toggleTheme()">
-      <span class="theme-icon" id="theme-icon">☀️</span>
-      <span id="theme-label">MODO CLARO</span>
+    <button class="hdr-btn" onclick="toggleTheme()" title="Cambiar tema">
+      <span class="theme-icon" id="theme-icon">☀</span>
+      <span id="theme-label">CLARO</span>
+    </button>
+    <button class="hdr-btn hdr-btn-settings" onclick="openSettings()" title="Configuración">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
     </button>
     <div class="user-info" id="user-info" style="display:none">
       <div class="user-avatar" id="user-avatar">👤</div>
@@ -1827,6 +2043,51 @@ function initAuthParticles() {
   if (overlay) observer.observe(overlay, { attributes: true, attributeFilter: ['style'] });
 }
 
+
+// ── Settings ──────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settings-modal').classList.add('open');
+  document.getElementById('cfg-api-url').textContent = API;
+  document.getElementById('cfg-backend-url').value = localStorage.getItem('shp-backend-url') || '';
+  const interval = localStorage.getItem('shp-refresh-interval') || '60';
+  document.getElementById('cfg-refresh-interval').value = interval;
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+function saveSettings() {
+  const url = document.getElementById('cfg-backend-url').value.trim();
+  const interval = document.getElementById('cfg-refresh-interval').value;
+  if (url) localStorage.setItem('shp-backend-url', url);
+  else localStorage.removeItem('shp-backend-url');
+  localStorage.setItem('shp-refresh-interval', interval);
+  closeSettings();
+  toast('Configuración guardada — recargando...', 'ok');
+  setTimeout(() => location.reload(), 1200);
+}
+
+// ── Filter servers ────────────────────────────────────────────────
+function filterServers(q) {
+  document.querySelectorAll('.server-card').forEach(card => {
+    const name = card.getAttribute('data-hostname') || '';
+    card.style.display = name.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ── Animated stat counters ────────────────────────────────────────
+function animateCounter(el, target) {
+  const duration = 600;
+  const start = performance.now();
+  const from = parseInt(el.textContent) || 0;
+  const update = (now) => {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (target - from) * ease);
+    if (p < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+
 // ─────────────────────────────────────────────
 //  SIDEBAR — SLIDE + FADE
 // ─────────────────────────────────────────────
@@ -2105,6 +2366,39 @@ function renderInventory(inv, hostname) {
   <button id="sidebar-float-btn" onclick="toggleSidebar()" title="Mostrar servidores">
     <span class="btn-arrow">▶</span>
   </button>
+
+
+  <!-- Settings Modal -->
+  <div id="settings-modal">
+    <div class="settings-box">
+      <div class="settings-title">
+        <span>⚙ CONFIGURACIÓN</span>
+        <button class="settings-close" onclick="closeSettings()">✕</button>
+      </div>
+      <div class="settings-row">
+        <label class="settings-label">URL del Backend</label>
+        <input type="text" class="settings-input" id="cfg-backend-url"
+          placeholder="http://192.168.1.100:8010"/>
+        <div class="settings-info">Dejar vacío para usar la IP actual del servidor</div>
+      </div>
+      <div class="settings-row">
+        <label class="settings-label">Intervalo de actualización</label>
+        <select class="settings-input" id="cfg-refresh-interval">
+          <option value="30">30 segundos</option>
+          <option value="60" selected>1 minuto</option>
+          <option value="300">5 minutos</option>
+          <option value="0">Manual</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label class="settings-label">Versión del sistema</label>
+        <div class="settings-info" style="margin-top:0">
+          ServerHardenPro v0.4.1 — Backend: <span id="cfg-api-url">—</span>
+        </div>
+      </div>
+      <button class="settings-save" onclick="saveSettings()">GUARDAR CONFIGURACIÓN</button>
+    </div>
+  </div>
 
   <!-- Scroll to top -->
   <button id="scroll-top-btn" onclick="scrollToTop()" title="Volver arriba">↑</button>
