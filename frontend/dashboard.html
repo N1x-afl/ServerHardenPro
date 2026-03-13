@@ -2920,6 +2920,36 @@ function authTab(tab) {
   document.getElementById('at-register').classList.toggle('active', tab === 'register');
 }
 
+// ══════════════════════════════════════════════════════
+//  JARVIS VOICE — Welcome message
+// ══════════════════════════════════════════════════════
+function playWelcomeVoice(username) {
+  if (!window.speechSynthesis) return;
+  const messages = [
+    `Access granted. Welcome back, ${username}. All systems operational.`,
+    `Identity confirmed. Welcome, ${username}. Security audit platform ready.`,
+    `Authentication successful. Good to see you, ${username}.`,
+  ];
+  const text = messages[Math.floor(Math.random() * messages.length)];
+  const speak = () => {
+    const msg = new SpeechSynthesisUtterance();
+    msg.text = text; msg.lang = 'en-US';
+    msg.rate = 0.82; msg.pitch = 0.65; msg.volume = 1;
+    const voices = speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.includes('Google UK English Male') ||
+      v.name.includes('Daniel') ||
+      v.name.includes('Alex') ||
+      v.lang === 'en-GB'
+    );
+    if (preferred) msg.voice = preferred;
+    speechSynthesis.speak(msg);
+  };
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
+  } else { speak(); }
+}
+
 async function doLogin() {
   const username = document.getElementById('l-user').value.trim();
   const password = document.getElementById('l-pass').value;
@@ -2961,6 +2991,7 @@ function onAuthSuccess(token, user) {
   currentUser = user;
   localStorage.setItem('shp-token', token);
   localStorage.setItem('shp-user',  JSON.stringify(user));
+  playWelcomeVoice(user.username || user.name || 'operator');
   document.getElementById('auth-overlay').style.display = 'none';
   // Mostrar info usuario en header
   const roleLabel = user.role === 'admin' ? '👑 ADMIN' : '👁 VIEWER';
