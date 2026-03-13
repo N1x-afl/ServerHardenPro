@@ -104,13 +104,13 @@ header {
 /* ══ SIDEBAR ══════════════════════════════════════════════════════ */
 .sidebar {
   width: 310px; min-width: 310px;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid rgba(255,255,255,0.06);
   padding: 20px 14px;
   display: flex; flex-direction: column; gap: 10px;
-  position: sticky; top: 68px;
-  height: calc(100vh - 68px); overflow-y: auto;
-  background: var(--bg2);
-  transition: var(--transition-theme);
+  position: sticky; top: 108px;
+  height: calc(100vh - 108px); overflow-y: auto;
+  background: rgba(8,13,20,0.6);
+  backdrop-filter: blur(12px);
 }
 .section-label {
   font-family: var(--mono); font-size: 10px;
@@ -169,11 +169,13 @@ header {
 @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
 
 .stat-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 22px 24px;
+  background: rgba(13,20,30,0.75);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 22px 24px;
   position: relative; overflow: hidden;
+  backdrop-filter: blur(12px);
   animation: fadeSlideIn .4s ease both;
-  transition: transform .2s, box-shadow .2s, var(--transition-theme);
+  transition: transform .2s, box-shadow .2s;
   cursor: default;
 }
 .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px var(--shadow); }
@@ -204,7 +206,7 @@ header {
 .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
 
 /* ── PANEL ── */
-.panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: var(--transition-theme); }
+.panel { background: rgba(13,20,30,0.75); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; backdrop-filter: blur(10px); }
 .panel-header {
   padding: 16px 22px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
@@ -1143,6 +1145,24 @@ header {
   color: rgba(255,255,255,0.2); font-family: var(--mono); font-size: 12px;
 }
 .dso-empty small { font-size: 10px; letter-spacing: 1px; }
+
+
+/* ══ CHARTS ═════════════════════════════════════════════════════════ */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+.chart-panel { }
+.chart-panel-full { }
+.chart-badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1px;
+  color: var(--muted); padding: 2px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+}
 
 </style>
 </head>
@@ -2131,6 +2151,194 @@ function scrollToTop() {
 }
 
 
+
+
+// ══════════════════════════════════════════════════════
+//  DASHBOARD CHARTS
+// ══════════════════════════════════════════════════════
+let authChartInst   = null;
+let trendChartInst  = null;
+let syslogChartInst = null;
+
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: { duration: 600, easing: 'easeOutQuart' },
+  plugins: { legend: { display: false }, tooltip: {
+    backgroundColor: 'rgba(6,10,15,0.9)',
+    borderColor: 'rgba(0,229,255,0.2)', borderWidth: 1,
+    titleFont: { family: 'Courier New', size: 11 },
+    bodyFont:  { family: 'Courier New', size: 11 },
+    titleColor: 'rgba(0,229,255,0.9)', bodyColor: '#fff',
+    padding: 10, cornerRadius: 8,
+  }},
+  scales: {
+    x: { grid: { color: 'rgba(255,255,255,0.04)' },
+         ticks: { color: 'rgba(255,255,255,0.3)', font: { family: 'Courier New', size: 10 } } },
+    y: { grid: { color: 'rgba(255,255,255,0.04)' },
+         ticks: { color: 'rgba(255,255,255,0.3)', font: { family: 'Courier New', size: 10 } },
+         beginAtZero: true }
+  }
+};
+
+async function loadDashboardCharts(hostname) {
+  const token = localStorage.getItem('shp-token');
+  if (!hostname) return;
+
+  // Show chart panels
+  document.getElementById('charts-row').style.display = 'grid';
+  document.getElementById('syslog-chart-panel').style.display = 'block';
+
+  try {
+    // ── Fetch history for trend chart ──────────────────────────
+    const histRes = await fetch(`${API}/servers/${hostname}/history`,
+      { headers: { Authorization: `Bearer ${token}` } });
+    const history = await histRes.json();
+    const histArr = Array.isArray(history) ? history : (history.history || []);
+
+    if (histArr.length > 0) {
+      const sorted = [...histArr].sort((a,b) => new Date(a.audited_at||a.created_at) - new Date(b.audited_at||b.created_at));
+      const labels = sorted.map(h => {
+        const d = new Date(h.audited_at || h.created_at);
+        return `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      });
+      const scores = sorted.map(h => h.score || 0);
+      const lastScore = scores[scores.length-1] || 0;
+      const scoreColor = lastScore >= 70 ? '#50c864' : lastScore >= 50 ? '#ffbe1e' : '#ff3c5c';
+
+      document.getElementById('chart-score-badge').textContent = `Último: ${lastScore}%`;
+
+      if (trendChartInst) trendChartInst.destroy();
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, 160);
+      grad.addColorStop(0, scoreColor + '33');
+      grad.addColorStop(1, 'transparent');
+
+      trendChartInst = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: scores,
+            borderColor: scoreColor,
+            backgroundColor: grad,
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: scoreColor,
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: { ...CHART_DEFAULTS,
+          scales: { ...CHART_DEFAULTS.scales,
+            y: { ...CHART_DEFAULTS.scales.y, max: 100,
+              ticks: { ...CHART_DEFAULTS.scales.y.ticks, callback: v => v + '%' } }
+          }
+        }
+      });
+    }
+
+    // ── Fetch logs for auth + syslog charts ──────────────────────
+    const logsRes = await fetch(`${API}/servers/${hostname}/logs`,
+      { headers: { Authorization: `Bearer ${token}` } });
+    const logs = await logsRes.json();
+
+    if (logs && (logs.auth_fail_total !== undefined)) {
+      // Auth events bar chart
+      const authFail = logs.auth_fail_total || 0;
+      const authOk   = logs.auth_ok_total   || 0;
+      const bfCount  = logs.brute_force_count || 0;
+
+      document.getElementById('chart-fail-badge').textContent =
+        `${authFail} fallidos · ${bfCount} BF`;
+
+      if (authChartInst) authChartInst.destroy();
+      const ctx2 = document.getElementById('authChart').getContext('2d');
+      authChartInst = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['Login Fallidos', 'Login Exitosos', 'Fuerza Bruta'],
+          datasets: [{
+            data: [authFail, authOk, bfCount],
+            backgroundColor: [
+              'rgba(255,59,92,0.6)',
+              'rgba(80,200,100,0.6)',
+              'rgba(255,30,60,0.8)'
+            ],
+            borderColor: [
+              'rgba(255,59,92,0.9)',
+              'rgba(80,200,100,0.9)',
+              'rgba(255,30,60,1)'
+            ],
+            borderWidth: 1,
+            borderRadius: 6,
+          }]
+        },
+        options: { ...CHART_DEFAULTS }
+      });
+
+      // Syslog errors chart
+      const errCount  = logs.syslog_error_count || 0;
+      const critCount = logs.syslog_crit_count  || 0;
+      document.getElementById('chart-syslog-badge').textContent =
+        `${errCount} errores · ${critCount} críticos`;
+
+      // Parse top IPs for syslog
+      let topIPs = [];
+      try { topIPs = typeof logs.top_ips === 'string' ? JSON.parse(logs.top_ips) : (logs.top_ips || []); } catch {}
+
+      if (syslogChartInst) syslogChartInst.destroy();
+      const ctx3 = document.getElementById('syslogChart').getContext('2d');
+
+      if (topIPs.length > 0) {
+        const ipLabels = topIPs.slice(0,8).map(ip => Array.isArray(ip) ? ip[0] : ip.ip || ip);
+        const ipCounts = topIPs.slice(0,8).map(ip => Array.isArray(ip) ? ip[1] : ip.count || 1);
+        syslogChartInst = new Chart(ctx3, {
+          type: 'bar',
+          data: {
+            labels: ipLabels,
+            datasets: [{
+              label: 'Intentos',
+              data: ipCounts,
+              backgroundColor: 'rgba(255,190,30,0.5)',
+              borderColor: 'rgba(255,190,30,0.9)',
+              borderWidth: 1, borderRadius: 6,
+            }]
+          },
+          options: { ...CHART_DEFAULTS,
+            indexAxis: 'y',
+            plugins: { ...CHART_DEFAULTS.plugins,
+              tooltip: { ...CHART_DEFAULTS.plugins.tooltip,
+                callbacks: { label: ctx => ` ${ctx.raw} intentos` }
+              }
+            }
+          }
+        });
+      } else {
+        syslogChartInst = new Chart(ctx3, {
+          type: 'doughnut',
+          data: {
+            labels: ['Errores', 'Críticos'],
+            datasets: [{
+              data: [errCount, critCount],
+              backgroundColor: ['rgba(255,190,30,0.6)', 'rgba(255,59,92,0.6)'],
+              borderColor:      ['rgba(255,190,30,0.9)', 'rgba(255,59,92,0.9)'],
+              borderWidth: 1,
+            }]
+          },
+          options: { ...CHART_DEFAULTS,
+            scales: {},
+            plugins: { ...CHART_DEFAULTS.plugins, legend: { display: true,
+              labels: { color: 'rgba(255,255,255,0.5)', font: { family: 'Courier New', size: 11 } }
+            }}
+          }
+        });
+      }
+    }
+  } catch(e) {
+    console.error('loadDashboardCharts error:', e);
+  }
+}
 
 // ══════════════════════════════════════════════════════
 //  DEVSECOPS PANEL
