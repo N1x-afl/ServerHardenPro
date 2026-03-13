@@ -336,55 +336,167 @@ header {
 footer { text-align: center; padding: 18px; font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 2px; border-top: 1px solid var(--border); }
 
 /* ══ AUTH OVERLAY ═══════════════════════════════════════════════ */
+/* ══ LOGIN REDESIGN — Network Particles ════════════════════════════ */
 #auth-overlay {
   position: fixed; inset: 0; z-index: 9999;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(8,12,16,.97);
-  backdrop-filter: blur(12px);
+  background: #060a0f;
+  overflow: hidden;
+}
+#auth-canvas {
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none;
 }
 .auth-box {
-  width: 420px; background: var(--bg2);
-  border: 1px solid var(--border); border-radius: 18px;
-  padding: 40px 36px; box-shadow: 0 24px 60px rgba(0,0,0,.6);
-  animation: fadeSlideIn .4s ease;
+  position: relative; z-index: 1;
+  width: 440px;
+  background: rgba(10,16,24,0.82);
+  border: 1px solid rgba(0,229,255,0.18);
+  border-radius: 20px;
+  padding: 44px 40px 36px;
+  box-shadow: 0 0 0 1px rgba(0,229,255,0.05),
+              0 32px 80px rgba(0,0,0,0.7),
+              0 0 80px rgba(0,229,255,0.06) inset;
+  backdrop-filter: blur(20px);
+  animation: authAppear .6s cubic-bezier(.16,1,.3,1) both;
 }
-.auth-logo { text-align: center; margin-bottom: 28px; }
-.auth-logo-icon {
-  width: 64px; height: 64px; border: 2px solid var(--cyan);
-  border-radius: 16px; display: inline-grid; place-items: center;
-  font-size: 30px; box-shadow: 0 0 28px rgba(0,229,255,.3);
-  margin-bottom: 14px;
+@keyframes authAppear {
+  from { opacity:0; transform: translateY(24px) scale(.97); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
 }
-.auth-logo-title { font-family: var(--head); font-weight: 800; font-size: 26px; letter-spacing: 2px; }
-.auth-logo-title em { color: var(--cyan); font-style: normal; }
-.auth-logo-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 3px; margin-top: 4px; }
-.auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+
+/* Shield logo */
+.auth-logo { text-align: center; margin-bottom: 32px; }
+.auth-shield-wrap {
+  position: relative;
+  width: 80px; height: 80px;
+  margin: 0 auto 16px;
+}
+.auth-shield-ring {
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,229,255,0.2);
+  animation: shieldPulse 3s ease-in-out infinite;
+}
+.auth-shield-ring:nth-child(2) {
+  inset: -16px;
+  border-color: rgba(0,229,255,0.1);
+  animation-delay: .5s;
+}
+@keyframes shieldPulse {
+  0%,100% { transform: scale(1); opacity:.6; }
+  50%      { transform: scale(1.06); opacity:1; }
+}
+.auth-shield-icon {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(0,180,220,0.08));
+  border: 1.5px solid rgba(0,229,255,0.4);
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px rgba(0,229,255,0.25), 0 0 80px rgba(0,229,255,0.08);
+  position: relative; z-index: 1;
+}
+/* SVG Shield */
+.auth-shield-icon svg {
+  width: 42px; height: 42px;
+  filter: drop-shadow(0 0 8px rgba(0,229,255,0.6));
+}
+.auth-logo-title {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, #fff 40%, var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.auth-logo-title em {
+  font-style: normal;
+  -webkit-text-fill-color: var(--cyan);
+}
+.auth-logo-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(0,229,255,0.5);
+  letter-spacing: 4px;
+  margin-top: 6px;
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 28px;
+  gap: 4px;
+}
 .auth-tab {
-  flex: 1; padding: 10px; text-align: center; cursor: pointer;
-  font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
-  color: var(--muted); border-bottom: 2px solid transparent;
-  transition: all .2s; text-transform: uppercase;
+  flex: 1; padding: 10px 0; text-align: center; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.3);
+  border-bottom: 2px solid transparent;
+  transition: all .25s; text-transform: uppercase;
 }
-.auth-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-.auth-field { margin-bottom: 16px; }
-.auth-field label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px; }
+.auth-tab.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+  text-shadow: 0 0 12px rgba(0,229,255,0.5);
+}
+.auth-tab:hover:not(.active) { color: rgba(255,255,255,0.6); }
+
+/* Fields */
+.auth-field { margin-bottom: 18px; }
+.auth-field label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  color: rgba(255,255,255,0.4); text-transform: uppercase;
+  display: block; margin-bottom: 8px;
+}
 .auth-field input {
-  width: 100%; background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 8px; padding: 12px 14px; color: var(--text);
-  font-family: var(--mono); font-size: 13px; outline: none;
-  transition: border-color .2s;
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 13px 16px;
+  color: var(--text); font-family: var(--mono); font-size: 13px;
+  outline: none; transition: all .2s;
+  box-sizing: border-box;
 }
-.auth-field input:focus { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,229,255,.1); }
+.auth-field input:focus {
+  border-color: rgba(0,229,255,0.5);
+  background: rgba(0,229,255,0.04);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+}
+.auth-field input::placeholder { color: rgba(255,255,255,0.2); }
+
+/* Button */
 .auth-btn {
-  width: 100%; padding: 14px; background: linear-gradient(135deg,var(--cyan),var(--cyan2));
-  border: none; border-radius: 8px; color: #080c10;
-  font-family: var(--head); font-weight: 700; font-size: 15px;
-  letter-spacing: 2px; cursor: pointer; margin-top: 8px;
-  transition: opacity .2s, transform .1s;
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--cyan), #0097b2);
+  border: none; border-radius: 10px;
+  color: #060a0f; font-family: var(--head); font-weight: 700;
+  font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+  cursor: pointer; margin-top: 8px;
+  transition: all .25s;
+  box-shadow: 0 4px 24px rgba(0,229,255,0.3);
+  position: relative; overflow: hidden;
 }
-.auth-btn:hover { opacity: .9; transform: translateY(-1px); }
+.auth-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  opacity: 0; transition: opacity .2s;
+}
+.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,255,0.45); }
+.auth-btn:hover::before { opacity: 1; }
 .auth-btn:active { transform: translateY(0); }
-.auth-error { background: rgba(255,59,92,.1); border: 1px solid rgba(255,59,92,.3); color: var(--red); font-family: var(--mono); font-size: 11px; padding: 10px 14px; border-radius: 6px; margin-top: 12px; display: none; letter-spacing: 1px; }
+
+/* Error */
+.auth-error {
+  background: rgba(255,59,92,0.1);
+  border: 1px solid rgba(255,59,92,0.3);
+  color: var(--red); font-family: var(--mono); font-size: 11px;
+  padding: 10px 14px; border-radius: 8px; margin-top: 12px;
+  display: none; letter-spacing: 1px;
+}
 .auth-error.visible { display: block; }
 .auth-role-badge { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 3px 10px; border-radius: 4px; letter-spacing: 1px; }
 .role-admin  { background: rgba(0,229,255,.12); color: var(--cyan); border: 1px solid rgba(0,229,255,.25); }
@@ -689,9 +801,22 @@ body.light-mode {
 
 <!-- ══ AUTH OVERLAY ══ -->
 <div id="auth-overlay">
+  <canvas id="auth-canvas"></canvas>
   <div class="auth-box">
     <div class="auth-logo">
-      <div class="auth-logo-icon">🛡️</div>
+      <div class="auth-shield-wrap">
+        <div class="auth-shield-ring"></div>
+        <div class="auth-shield-ring"></div>
+        <div class="auth-shield-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 6.5V11C3 15.55 6.84 19.74 12 21C17.16 19.74 21 15.55 21 11V6.5L12 2Z"
+              fill="rgba(0,229,255,0.15)" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"
+              stroke-linejoin="round"/>
+            <path d="M9 12L11 14L15 10" stroke="rgba(0,229,255,1)" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
       <div class="auth-logo-title">Server<em>Harden</em>Pro</div>
       <div class="auth-logo-sub">// SECURITY AUDIT PLATFORM</div>
     </div>
@@ -1602,6 +1727,106 @@ function scrollToTop() {
   document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+
+// ══════════════════════════════════════════════════════
+//  NETWORK PARTICLES — LOGIN BACKGROUND
+// ══════════════════════════════════════════════════════
+function initAuthParticles() {
+  const canvas = document.getElementById('auth-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles, animId;
+
+  const CYAN = 'rgba(0,229,255,';
+  const COUNT = 70;
+  const MAX_DIST = 140;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function mkParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - .5) * .4,
+      vy: (Math.random() - .5) * .4,
+      r: Math.random() * 2 + 1,
+      a: Math.random() * .6 + .2
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({ length: COUNT }, mkParticle);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < MAX_DIST) {
+          const alpha = (1 - dist / MAX_DIST) * .35;
+          ctx.beginPath();
+          ctx.strokeStyle = CYAN + alpha + ')';
+          ctx.lineWidth = .6;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Draw nodes
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = CYAN + p.a + ')';
+      ctx.fill();
+
+      // Glow
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
+      g.addColorStop(0, CYAN + (p.a * .4) + ')');
+      g.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+
+      // Move
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+    });
+
+    animId = requestAnimationFrame(draw);
+  }
+
+  function stop() {
+    if (animId) cancelAnimationFrame(animId);
+    canvas.style.display = 'none';
+  }
+
+  window.addEventListener('resize', resize);
+  init();
+  draw();
+
+  // Stop particles when overlay hides
+  const observer = new MutationObserver(() => {
+    const overlay = document.getElementById('auth-overlay');
+    if (overlay && overlay.style.display === 'none') stop();
+  });
+  const overlay = document.getElementById('auth-overlay');
+  if (overlay) observer.observe(overlay, { attributes: true, attributeFilter: ['style'] });
+}
+
 // ─────────────────────────────────────────────
 //  SIDEBAR — SLIDE + FADE
 // ─────────────────────────────────────────────
@@ -1870,6 +2095,7 @@ function renderInventory(inv, hostname) {
   tryRestoreSession();
   initSidebar();
   initScrollTop();
+  initAuthParticles();
   setInterval(() => {
     if (authToken) { loadServers(); loadSummary(); }
   }, 60000);
