@@ -11,20 +11,18 @@
    TEMA: dark / light
 ══════════════════════════════════════════════════════════════════ */
 :root {
-  --cyan:   #ff6a00; --cyan2: #cc5200;
+  --cyan:   #00e5ff; --cyan2: #00b4cc;
   --green:  #39ff6e; --red:   #ff3b5c; --yellow: #ffd600;
-  --jarvis: #ff6a00; --jarvis2: #ff9d00; --jarvis3: #ffcc00;
-  --arc:    #4fc3f7; --arc2: #0288d1;
   --mono:   'Share Tech Mono', monospace;
   --ui:     'Rajdhani', sans-serif;
   --head:   'Exo 2', sans-serif;
   --transition-theme: background .3s, color .3s, border-color .3s;
 }
 [data-theme="dark"] {
-  --bg:     #050608; --bg2: #0a0c10; --bg3: #0f1218;
-  --border: #2a1a0a; --text: #e8d5b0; --muted: #7a5c3a;
-  --shadow: rgba(0,0,0,.7);
-  --grid-line: rgba(255,106,0,.04);
+  --bg:     #080c10; --bg2: #0d1117; --bg3: #111820;
+  --border: #1e2d3d; --text: #cdd9e5; --muted: #4a6274;
+  --shadow: rgba(0,0,0,.5);
+  --grid-line: rgba(0,229,255,.03);
 }
 
 [data-theme="light"] .logo-main { color: #0f172a; }
@@ -74,7 +72,7 @@ header {
 }
 .logo-text { display: flex; flex-direction: column; line-height: 1; }
 .logo-main { font-family: var(--head); font-weight: 800; font-size: 24px; letter-spacing: 2px; }
-.logo-main em { color: var(--jarvis); font-style: normal; }
+.logo-main em { color: var(--cyan); font-style: normal; }
 .logo-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 3px; margin-top: 4px; }
 .header-right { display: flex; align-items: center; gap: 20px; }
 .ws-badge { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 2px; }
@@ -1166,178 +1164,6 @@ header {
   border-radius: 20px;
 }
 
-
-/* ═══════════════════════════════════════════════════════
-   JARVIS / IRON MAN THEME — v12
-════════════════════════════════════════════════════════ */
-
-/* HUD scan line effect on body */
-body::before {
-  content: '';
-  position: fixed;
-  top: -100%;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, transparent, var(--jarvis), var(--jarvis2), transparent);
-  animation: scanline 6s linear infinite;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.6;
-}
-@keyframes scanline {
-  0%   { top: -1%; }
-  100% { top: 101%; }
-}
-
-/* HUD corner brackets on cards */
-.stat-card::before, .stat-card::after,
-.panel-card::before, .panel-card::after {
-  content: '';
-  position: absolute;
-  width: 14px; height: 14px;
-  border-color: var(--jarvis);
-  border-style: solid;
-  opacity: 0.8;
-}
-.stat-card::before, .panel-card::before {
-  top: 6px; left: 6px;
-  border-width: 2px 0 0 2px;
-}
-.stat-card::after, .panel-card::after {
-  bottom: 6px; right: 6px;
-  border-width: 0 2px 2px 0;
-}
-
-/* Arc reactor glow on score */
-.score-global {
-  text-shadow: 0 0 20px var(--jarvis), 0 0 40px var(--jarvis2), 0 0 80px var(--jarvis3);
-  animation: arc-pulse 2s ease-in-out infinite;
-}
-@keyframes arc-pulse {
-  0%, 100% { text-shadow: 0 0 20px var(--jarvis), 0 0 40px var(--jarvis2); }
-  50%       { text-shadow: 0 0 30px var(--jarvis), 0 0 60px var(--jarvis2), 0 0 100px var(--jarvis3); }
-}
-
-/* HUD ring around logo */
-.logo-shield {
-  position: relative;
-}
-.logo-shield::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 1px solid var(--jarvis);
-  animation: ring-rotate 4s linear infinite;
-  opacity: 0.5;
-}
-@keyframes ring-rotate {
-  from { transform: rotate(0deg) scale(1); }
-  50%  { transform: rotate(180deg) scale(1.1); opacity: 0.8; }
-  to   { transform: rotate(360deg) scale(1); }
-}
-
-/* Sidebar server items — HUD style */
-.server-item {
-  border-left: 3px solid var(--jarvis) !important;
-  position: relative;
-  overflow: hidden;
-}
-.server-item::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,106,0,0.08), transparent);
-  animation: hud-sweep 3s ease-in-out infinite;
-}
-@keyframes hud-sweep {
-  0%   { left: -100%; }
-  50%  { left: 100%; }
-  100% { left: 100%; }
-}
-
-/* JARVIS scan effect when loading server */
-.jarvis-scanning {
-  position: relative;
-  overflow: hidden;
-}
-.jarvis-scanning::after {
-  content: 'SCANNING...';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 4px;
-  color: var(--jarvis);
-  background: rgba(5,6,8,0.85);
-  animation: scan-fade 1.5s ease-out forwards;
-}
-@keyframes scan-fade {
-  0%   { opacity: 1; }
-  70%  { opacity: 1; }
-  100% { opacity: 0; pointer-events: none; }
-}
-
-/* Tab active — orange glow */
-.tab-btn.active {
-  border-bottom: 2px solid var(--jarvis) !important;
-  color: var(--jarvis) !important;
-  text-shadow: 0 0 10px var(--jarvis);
-}
-
-/* Stat card value glow */
-.stat-value {
-  text-shadow: 0 0 15px currentColor;
-}
-
-/* Header glow line */
-.app-header {
-  border-bottom: 1px solid var(--jarvis) !important;
-  box-shadow: 0 2px 20px rgba(255,106,0,0.15) !important;
-}
-
-/* WS badge — arc reactor style */
-.ws-badge.live {
-  color: var(--jarvis2) !important;
-  text-shadow: 0 0 8px var(--jarvis2);
-}
-
-/* JARVIS typing effect for server title */
-@keyframes jarvis-type {
-  from { width: 0; }
-  to   { width: 100%; }
-}
-.server-title-text {
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
-  animation: jarvis-type 0.6s steps(30) forwards;
-}
-
-/* Progress bars — orange gradient */
-.progress-fill, .bar-fill {
-  background: linear-gradient(90deg, var(--jarvis), var(--jarvis2), var(--jarvis3)) !important;
-  box-shadow: 0 0 8px var(--jarvis);
-}
-
-/* Check status colors stay but with glow */
-.status-pass { text-shadow: 0 0 8px var(--green); }
-.status-fail { text-shadow: 0 0 8px var(--red); }
-.status-warn { text-shadow: 0 0 8px var(--yellow); }
-
-/* Login overlay — Iron Man */
-#auth-overlay {
-  background: radial-gradient(ellipse at center, #0a0800 0%, #050608 60%, #000 100%) !important;
-}
-
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 </style>
 </head>
 <body>
@@ -1890,9 +1716,6 @@ async function loadServers() {
 }
 
 function renderServers(servers) {
-  // Cache for JARVIS voice
-  window._serverCache = {};
-  servers.forEach(s => { window._serverCache[s.hostname] = s; });
   document.getElementById('srv-label').textContent = `// Servidores (${servers.length})`;
   const list = document.getElementById('server-list');
   if (!servers.length) {
@@ -3098,7 +2921,6 @@ function authTab(tab) {
 }
 
 
-
 async function doLogin() {
   const username = document.getElementById('l-user').value.trim();
   const password = document.getElementById('l-pass').value;
@@ -3481,9 +3303,6 @@ function renderInventory(inv, hostname) {
     </div><!-- /dso-content -->
   </div><!-- /dso-layout -->
 </div><!-- /devsecops-panel -->
-
-  <span id="jarvis-text">J.A.R.V.I.S. ONLINE</span>
-</div>
 
 </body>
 </html>
