@@ -1,18 +1,20 @@
 version: "3.9"
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║         ServerHardenPro — Docker Compose v0.4                   ║
+# ║         ServerHardenPro — Docker Compose v0.5                   ║
 # ║  Uso: docker compose up -d --build                               ║
-# ║  Panel: http://TU_IP:8010                                        ║
-# ║  API:   http://TU_IP:8010/docs                                   ║
+# ║  Panel: https://TU_IP  (HTTPS — puerto 443)                     ║
+# ║  API:   https://TU_IP/docs                                       ║
 # ╚══════════════════════════════════════════════════════════════════╝
+
 services:
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: shp_backend
-    ports:
-      - "8010:8000"
+    expose:
+      - "8000"
     volumes:
       - ./backend:/app
       - ./frontend:/app/../frontend
@@ -26,6 +28,28 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+    networks:
+      - shp_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: shp_nginx
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - shp_net
+
+networks:
+  shp_net:
+    driver: bridge
 
 volumes:
   shp_data:
