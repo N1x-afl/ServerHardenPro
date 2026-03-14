@@ -1164,6 +1164,48 @@ header {
   border-radius: 20px;
 }
 
+
+/* ── Export dropdown ─────────────────────────────── */
+.export-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.export-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  animation: dropFadeIn .15s ease;
+}
+.export-menu.open { display: block; }
+.export-item {
+  padding: 10px 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background .15s;
+}
+.export-item:hover {
+  background: rgba(0,229,255,0.08);
+  color: var(--cyan);
+}
+.export-item:first-child { border-bottom: 1px solid var(--border); }
+@keyframes dropFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 </style>
 </head>
 <body>
@@ -1361,8 +1403,19 @@ header {
           <span id="detail-title">Seleccioná un servidor</span>
         </div>
         <div class="btn-group">
-          <button class="btn btn-cyan" onclick="exportPDF()">⬇ PDF</button>
-          <button class="btn btn-green" onclick="exportExcel()">⬇ Excel</button>
+          <div class="export-dropdown" id="exportDropdown">
+            <button class="btn btn-cyan" onclick="toggleExportMenu(event)">
+              ⬇ EXPORTAR <span style="font-size:10px;margin-left:4px;">▼</span>
+            </button>
+            <div class="export-menu" id="exportMenu">
+              <div class="export-item" onclick="exportPDF(); closeExportMenu()">
+                <span>📄</span> Reporte PDF
+              </div>
+              <div class="export-item" onclick="exportExcel(); closeExportMenu()">
+                <span>📊</span> Reporte Excel
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
