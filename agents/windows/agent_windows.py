@@ -2,10 +2,10 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
 ║         ServerHardenPro — Agente de Auditoría Windows           ║
-║                          Fase 3                                  ║
-║  Uso: python agent_windows.py                                    ║
+║                          v0.5                                    ║
+║  Uso normal:  python agent_windows.py                            ║
+║  Custom API:  set SHP_API=https://IP && python agent_windows.py  ║
 ║  Requiere: ejecutar como Administrador                           ║
-║  Salida: resultado_<hostname>.json                               ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
@@ -16,7 +16,20 @@ import platform
 import socket
 import datetime
 import sys
+import ssl
+import argparse
+import urllib.request
+import urllib.error
 import ctypes
+
+# ── URL del backend ───────────────────────────────────────────────
+_DEFAULT_API = os.environ.get("SHP_API", "https://localhost/audit")
+API_URL = _DEFAULT_API
+
+# ── SSL — acepta certificados self-signed ─────────────────────────
+SSL_CTX = ssl.create_default_context()
+SSL_CTX.check_hostname = False
+SSL_CTX.verify_mode = ssl.CERT_NONE
 
 # ── Colores para la terminal ──────────────────────────────────────
 class C:
@@ -565,19 +578,50 @@ def run_audit():
         "checks": results
     }
 
+    # Guardar JSON localmente como backup
     filename = f"resultado_{hostname}.json"
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
+    print(f"  {C.GREEN}💾 Backup guardado en:{C.RESET} {filename}")
 
-    print(f"  {C.GREEN}💾 Resultado guardado en:{C.RESET} {filename}")
-    print(f"{C.MUTED}  (Este archivo será enviado al panel en la Fase 4){C.RESET}\n")
+    # Enviar al backend
+    send_to_panel(output)
 
     return output
 
+def send_to_panel(data: dict):
+    """Envía el resultado al panel ServerHardenPro."""
+    print(f"\n{C.CYAN}  📡 Enviando resultado al panel...{C.RESET}")
+    print(f"  {C.MUTED}→ {API_URL}{C.RESET}")
+    try:
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        req  = urllib.request.Request(
+            API_URL, data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=15, context=SSL_CTX) as resp:
+            result = json.loads(resp.read().decode())
+            print(f"  {C.GREEN}✅ Panel actualizado:{C.RESET} {result.get('message', 'OK')}\n")
+    except urllib.error.URLError as e:
+        print(f"  {C.YELLOW}⚠  No se pudo conectar al panel:{C.RESET} {e.reason}")
+        print(f"  {C.MUTED}   Verificá que el backend esté corriendo en {API_URL}{C.RESET}\n")
+    except Exception as e:
+        print(f"  {C.YELLOW}⚠  Error al enviar:{C.RESET} {e}\n")
+
 # ══════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ServerHardenPro — Agente Windows")
+    parser.add_argument("--api", help="URL del backend (ej: https://192.168.10.90)")
+    args = parser.parse_args()
+
+    if args.api:
+        base = args.api.rstrip("/")
+        API_URL = f"{base}/audit"
+
     if platform.system() != "Windows":
         print(f"\n  ❌ Este agente solo corre en Windows.\n"
               f"  Para Linux usá: python3 agent_linux.py\n")
         sys.exit(1)
+
     run_audit()

@@ -2,9 +2,10 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
 ║           ServerHardenPro — Agente de Auditoría Linux           ║
-║                          Fase 2                                  ║
-║  Uso: python3 agent_linux.py                                     ║
-║  Salida: resultado_<hostname>.json                               ║
+║                          v0.5                                    ║
+║  Uso normal:  sudo python3 agent_linux.py                        ║
+║  Modo cron:   sudo python3 agent_linux.py --cron                 ║
+║  Custom API:  SHP_API=https://IP sudo -E python3 agent_linux.py  ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
@@ -15,16 +16,23 @@ import platform
 import socket
 import datetime
 import sys
+import ssl
+import argparse
 import urllib.request
 import urllib.error
 
-# ── URL del panel — cambiá si usás otro puerto ────────────────────
 # ── URL del panel ────────────────────────────────────────────────
-# Podés configurarla de 3 formas:
-#   1. Argumento:        python3 agent_linux.py --api http://192.168.1.10:8010
-#   2. Variable de env:  export SHP_API=http://192.168.1.10:8010
-#   3. Valor por defecto: localhost (cambialo si es necesario)
-API_URL = os.environ.get("SHP_API", "http://localhost:8010/audit")
+# Configuración (en orden de prioridad):
+#   1. Argumento:       --api https://192.168.10.90
+#   2. Variable de env: export SHP_API=https://192.168.10.90
+#   3. Valor por defecto: https://localhost (Nginx)
+_DEFAULT_API = os.environ.get("SHP_API", "https://localhost/audit")
+API_URL = _DEFAULT_API  # se puede sobreescribir con --api
+
+# ── Contexto SSL — acepta certificados self-signed ───────────────
+SSL_CTX = ssl.create_default_context()
+SSL_CTX.check_hostname = False
+SSL_CTX.verify_mode = ssl.CERT_NONE
 
 # ── Colores para la terminal ──────────────────────────────────────
 class C:
@@ -824,7 +832,7 @@ def send_logs_to_panel(log_data: dict):
             log_url, data=body,
             headers={"Content-Type": "application/json"}, method="POST"
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=10, context=SSL_CTX) as resp:
             result = json.loads(resp.read().decode())
             print(f"  {C.GREEN}✅ Logs enviados:{C.RESET} {result.get('message','OK')}\n")
     except Exception as e:
@@ -842,7 +850,7 @@ def send_to_panel(data: dict):
             headers={"Content-Type": "application/json"},
             method="POST"
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=10, context=SSL_CTX) as resp:
             result = json.loads(resp.read().decode())
             print(f"  {C.GREEN}✅ Panel actualizado:{C.RESET} {result.get('message', 'OK')}\n")
     except urllib.error.URLError as e:
@@ -853,4 +861,39 @@ def send_to_panel(data: dict):
 
 # ══════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ServerHardenPro — Agente Linux")
+    parser.add_argument("--api", help="URL del backend (ej: https://192.168.10.90)")
+    parser.add_argument("--cron", action="store_true", help="Modo silencioso para cron")
+    args = parser.parse_args()
+
+    # Override API_URL si se pasó como argumento
+    if args.api:
+        base = args.api.rstrip("/")
+        API_URL = f"{base}/audit"
+
+    # Modo cron: redirigir output a log
+    if args.cron:
+        import logging
+        log_dir = "/var/log/shp"
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = f"{log_dir}/agent.log"
+        logging.basicConfig(
+            filename=log_file,
+            level=logging.INFO,
+            format="%(asctime)s %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        # Redirigir print a log en modo cron
+        import io
+        class LogWriter(io.TextIOBase):
+            def write(self, msg):
+                if msg.strip():
+                    logging.info(msg.strip())
+                return len(msg)
+        sys.stdout = LogWriter()
+
+    if platform.system() != "Linux":
+        print("❌ Este agente solo corre en Linux.")
+        sys.exit(1)
+
     run_audit()
