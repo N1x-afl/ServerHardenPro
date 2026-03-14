@@ -1579,8 +1579,17 @@ header {
 //  CONFIG
 // ─────────────────────────────────────────────
 // ── Backend URL — siempre usa la IP del servidor actual ──
-const API    = `http://${window.location.hostname}:8010`;
-const WS_URL = `ws://${window.location.hostname}:8010/ws`;
+// Auto-detect HTTPS vs HTTP y puerto
+const _proto  = window.location.protocol === 'https:' ? 'https' : 'http';
+const _wsProto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const _host   = window.location.hostname;
+const _port   = window.location.port;
+// Si viene por HTTPS sin puerto (Nginx) no agrega :8010
+const _base   = (_port && _port !== '443' && _port !== '80')
+  ? `${_host}:${_port}`
+  : _host;
+const API    = localStorage.getItem('shp-api') || `${_proto}://${_base}`;
+const WS_URL = `${_wsProto}://${_base}/ws`;
 let currentServer = null;
 let scoreChart = null;
 let ws = null;
