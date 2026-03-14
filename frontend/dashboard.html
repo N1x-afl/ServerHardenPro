@@ -3194,6 +3194,22 @@ function renderInventory(inv, hostname) {
     if (authToken) { loadServers(); loadSummary(); }
   }, 60000);
 })();
+
+// ── Export dropdown ──────────────────────────────
+function toggleExportMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('exportMenu');
+  const isOpen = menu.classList.contains('open');
+  closeExportMenu();
+  if (!isOpen) menu.classList.add('open');
+}
+function closeExportMenu() {
+  document.getElementById('exportMenu')?.classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('exportDropdown');
+  if (dropdown && !dropdown.contains(e.target)) closeExportMenu();
+});
 </script>
   <!-- Sidebar float button (aparece cuando sidebar está oculto) -->
   <button id="sidebar-float-btn" onclick="toggleSidebar()" title="Mostrar servidores">
