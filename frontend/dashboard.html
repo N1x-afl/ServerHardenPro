@@ -1357,6 +1357,121 @@ header {
 }
 .notif-toast-icon { font-size: 16px; }
 
+
+/* ── Sidebar filter buttons ─────────────────────────────── */
+.srv-filters {
+  display: flex; gap: 4px; padding: 8px 12px 4px;
+  flex-wrap: wrap;
+}
+.srv-filter-btn {
+  font-family: var(--mono); font-size: 9px;
+  padding: 3px 8px; border-radius: 4px;
+  border: 1px solid var(--border);
+  background: none; color: var(--muted);
+  cursor: pointer; letter-spacing: 1px;
+  transition: all .15s;
+}
+.srv-filter-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.srv-filter-btn.active { background: var(--cyan); color: var(--bg); border-color: var(--cyan); font-weight: bold; }
+.srv-filter-btn.f-crit.active { background: var(--red); border-color: var(--red); }
+.srv-filter-btn.f-warn.active { background: var(--yellow); border-color: var(--yellow); color: var(--bg); }
+.srv-filter-btn.f-pass.active { background: var(--green); border-color: var(--green); color: var(--bg); }
+
+/* ── Comparativa modal ──────────────────────────────────── */
+.cmp-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.6); z-index: 900;
+  align-items: center; justify-content: center;
+}
+.cmp-modal-overlay.open { display: flex; }
+.cmp-modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; width: 92%; max-width: 900px;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7);
+  animation: cmpFadeIn .25s ease;
+}
+@keyframes cmpFadeIn {
+  from { opacity:0; transform: scale(.96); }
+  to   { opacity:1; transform: scale(1); }
+}
+.cmp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 13px; color: var(--cyan);
+  letter-spacing: 2px;
+}
+.cmp-header button {
+  background: none; border: none; color: var(--muted);
+  font-size: 20px; cursor: pointer; transition: color .2s;
+}
+.cmp-header button:hover { color: var(--text); }
+.cmp-selectors {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.cmp-selector label {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--muted); letter-spacing: 1px;
+  display: block; margin-bottom: 6px;
+}
+.cmp-selector select {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  padding: 8px 10px; cursor: pointer;
+}
+.cmp-selector select:focus { outline: none; border-color: var(--cyan); }
+.cmp-body { padding: 20px 24px; }
+.cmp-scores {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  gap: 12px; align-items: center; margin-bottom: 20px;
+}
+.cmp-score-box {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; text-align: center;
+}
+.cmp-score-val {
+  font-family: var(--mono); font-size: 36px; font-weight: bold;
+}
+.cmp-score-host {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  margin-top: 4px;
+}
+.cmp-vs {
+  font-family: var(--mono); font-size: 14px;
+  color: var(--muted); text-align: center;
+}
+.cmp-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--mono); font-size: 11px;
+}
+.cmp-table th {
+  padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--cyan); letter-spacing: 1px;
+  font-size: 10px;
+}
+.cmp-table td {
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table tr:hover td { background: rgba(0,229,255,.03); }
+.cmp-win  { color: var(--green); font-weight: bold; }
+.cmp-lose { color: var(--red); }
+.cmp-tie  { color: var(--muted); }
+.cmp-btn {
+  display: inline-block; margin: 16px 24px;
+  background: var(--cyan); color: var(--bg);
+  font-family: var(--mono); font-size: 11px;
+  padding: 8px 18px; border-radius: 6px;
+  border: none; cursor: pointer; letter-spacing: 1px;
+  transition: opacity .2s;
+}
+.cmp-btn:hover { opacity: .85; }
+
 </style>
 </head>
 <body>
@@ -1389,6 +1504,13 @@ header {
         <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
       </svg>
       <span>ACTUALIZAR</span>
+    </button>
+
+    <button class="hdr-btn" onclick="openComparativa()" title="Comparativa">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/>
+      </svg>
+      <span>COMPARAR</span>
     </button>
 
     <button class="hdr-btn hdr-btn-settings" onclick="openSettings()" title="Configuración">
@@ -1510,6 +1632,12 @@ header {
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <p class="section-label" id="srv-label">// Cargando...</p>
+    <div class="srv-filters">
+      <button class="srv-filter-btn active" onclick="filterServers('all')" id="f-all">TODOS</button>
+      <button class="srv-filter-btn f-crit" onclick="filterServers('crit')" id="f-crit">CRIT</button>
+      <button class="srv-filter-btn f-warn" onclick="filterServers('warn')" id="f-warn">WARN</button>
+      <button class="srv-filter-btn f-pass" onclick="filterServers('pass')" id="f-pass">OK</button>
+    </div>
     <div id="server-list"><div class="loader"></div></div>
     <button class="sidebar-hide-btn" onclick="toggleSidebar()">◀ &nbsp;ESCONDER</button>
   </aside>
@@ -1939,6 +2067,7 @@ async function loadServers() {
 }
 
 function renderServers(servers) {
+  _allServers = servers;
   try { NOTIF.checkServers(servers); } catch(e) {}
   document.getElementById('srv-label').textContent = `// Servidores (${servers.length})`;
   const list = document.getElementById('server-list');
@@ -1952,7 +2081,7 @@ function renderServers(servers) {
     const logo   = getOsLogo(s.os, s.platform);
     const pctColor = cls === 'ok' ? 'var(--green)' : cls === 'warn' ? 'var(--yellow)' : 'var(--red)';
     return `
-      <div class="server-card ${cls} ${active}" onclick="selectServer('${s.hostname}')">
+      <div class="server-card ${cls} ${active}" onclick="selectServer('${s.hostname}')" data-score="${s.summary?.score_percent||s.score||0}">
         <div class="sc-top">
           <div class="sc-left">
             <div class="os-logo">${logo}</div>
@@ -2009,6 +2138,7 @@ function renderSummary(data) {
       avgBar.style.background = color;
     }
   }
+  setTimeout(applyFilter, 50);
 }
 
 // ─────────────────────────────────────────────
@@ -3569,6 +3699,157 @@ function clearAllNotifs() {
 // Initialize on load
 NOTIF.render();
 NOTIF.updateBadge();
+
+// ═══════════════════════════════════════════════════════
+//  SIDEBAR FILTER
+// ═══════════════════════════════════════════════════════
+let _allServers = [];
+let _activeFilter = 'all';
+
+function filterServers(filter) {
+  _activeFilter = filter;
+  // Update button states
+  ['all','crit','warn','pass'].forEach(f => {
+    const btn = document.getElementById(`f-${f}`);
+    if (btn) btn.classList.toggle('active', f === filter);
+  });
+  applyFilter();
+}
+
+function applyFilter() {
+  const cards = document.querySelectorAll('.server-card');
+  cards.forEach(card => {
+    const score = parseInt(card.dataset.score || 0);
+    let show = true;
+    if (_activeFilter === 'crit') show = score < 40;
+    else if (_activeFilter === 'warn') show = score >= 40 && score < 80;
+    else if (_activeFilter === 'pass') show = score >= 80;
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  COMPARATIVA LADO A LADO
+// ═══════════════════════════════════════════════════════
+function openComparativa() {
+  const overlay = document.getElementById('cmpOverlay');
+  overlay.classList.add('open');
+  // Populate selects with current servers
+  const selA = document.getElementById('cmpSelA');
+  const selB = document.getElementById('cmpSelB');
+  const valA = selA.value; const valB = selB.value;
+  selA.innerHTML = '<option value="">— Seleccionar —</option>';
+  selB.innerHTML = '<option value="">— Seleccionar —</option>';
+  _allServers.forEach(s => {
+    selA.innerHTML += `<option value="${s.hostname}" ${valA===s.hostname?'selected':''}>${s.hostname}</option>`;
+    selB.innerHTML += `<option value="${s.hostname}" ${valB===s.hostname?'selected':''}>${s.hostname}</option>`;
+  });
+  if (valA && valB) runComparativa();
+}
+
+function closeComparativa() {
+  document.getElementById('cmpOverlay').classList.remove('open');
+}
+
+async function runComparativa() {
+  const hostA = document.getElementById('cmpSelA').value;
+  const hostB = document.getElementById('cmpSelB').value;
+  const body  = document.getElementById('cmpBody');
+
+  if (!hostA || !hostB || hostA === hostB) {
+    body.innerHTML = '<div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:40px">Seleccioná dos servidores diferentes</div>';
+    return;
+  }
+
+  body.innerHTML = '<div class="loader" style="margin:40px auto"></div>';
+
+  try {
+    const [dataA, dataB] = await Promise.all([
+      fetch(`${API}/servers/${hostA}`).then(r => r.json()),
+      fetch(`${API}/servers/${hostB}`).then(r => r.json()),
+    ]);
+
+    const scoreA = dataA.summary?.score || dataA.summary?.score_percent || 0;
+    const scoreB = dataB.summary?.score || dataB.summary?.score_percent || 0;
+    const colorA = scoreA >= 80 ? 'var(--green)' : scoreA >= 40 ? 'var(--yellow)' : 'var(--red)';
+    const colorB = scoreB >= 80 ? 'var(--green)' : scoreB >= 40 ? 'var(--yellow)' : 'var(--red)';
+
+    // Build category comparison
+    const catsA = dataA.category_scores || {};
+    const catsB = dataB.category_scores || {};
+    const allCats = [...new Set([...Object.keys(catsA), ...Object.keys(catsB)])];
+
+    let catRows = '';
+    allCats.forEach(cat => {
+      const a = catsA[cat] ?? '-';
+      const b = catsB[cat] ?? '-';
+      const aNum = typeof a === 'number' ? a : -1;
+      const bNum = typeof b === 'number' ? b : -1;
+      const clsA = aNum > bNum ? 'cmp-win' : aNum < bNum ? 'cmp-lose' : 'cmp-tie';
+      const clsB = bNum > aNum ? 'cmp-win' : bNum < aNum ? 'cmp-lose' : 'cmp-tie';
+      catRows += `<tr>
+        <td class="${clsA}">${typeof a === 'number' ? a+'%' : a}</td>
+        <td style="color:var(--muted)">${cat}</td>
+        <td class="${clsB}">${typeof b === 'number' ? b+'%' : b}</td>
+      </tr>`;
+    });
+
+    // Summary rows
+    const summRows = [
+      ['PASS ✅', dataA.summary?.pass||0, dataB.summary?.pass||0],
+      ['FAIL ❌', dataA.summary?.fail||0, dataB.summary?.fail||0],
+      ['WARN ⚠️', dataA.summary?.warn||0, dataB.summary?.warn||0],
+      ['TOTAL',   dataA.summary?.total||0, dataB.summary?.total||0],
+    ].map(([label, a, b]) => {
+      const better = label === 'FAIL ❌' ? (a < b ? 'A' : b < a ? 'B' : '-') : (a > b ? 'A' : b > a ? 'B' : '-');
+      return `<tr>
+        <td class="${better==='A'?'cmp-win':better==='B'?'cmp-lose':'cmp-tie'}">${a}</td>
+        <td style="color:var(--muted)">${label}</td>
+        <td class="${better==='B'?'cmp-win':better==='A'?'cmp-lose':'cmp-tie'}">${b}</td>
+      </tr>`;
+    }).join('');
+
+    body.innerHTML = `
+      <div class="cmp-scores">
+        <div class="cmp-score-box">
+          <div class="cmp-score-val" style="color:${colorA}">${scoreA}%</div>
+          <div class="cmp-score-host">${hostA}</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px">${dataA.server?.os||''}</div>
+        </div>
+        <div class="cmp-vs">VS</div>
+        <div class="cmp-score-box">
+          <div class="cmp-score-val" style="color:${colorB}">${scoreB}%</div>
+          <div class="cmp-score-host">${hostB}</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px">${dataB.server?.os||''}</div>
+        </div>
+      </div>
+
+      <table class="cmp-table">
+        <thead><tr>
+          <th style="width:30%;text-align:center">${hostA}</th>
+          <th style="width:40%;text-align:center">MÉTRICA</th>
+          <th style="width:30%;text-align:center">${hostB}</th>
+        </tr></thead>
+        <tbody>${summRows}</tbody>
+      </table>
+
+      ${allCats.length ? `
+      <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;padding:16px 0 8px">
+        // POR CATEGORÍA
+      </div>
+      <table class="cmp-table">
+        <thead><tr>
+          <th style="text-align:center">${hostA}</th>
+          <th style="text-align:center">CATEGORÍA</th>
+          <th style="text-align:center">${hostB}</th>
+        </tr></thead>
+        <tbody>${catRows}</tbody>
+      </table>` : ''}
+    `;
+  } catch(e) {
+    body.innerHTML = `<div style="text-align:center;color:var(--red);font-family:var(--mono);padding:40px">Error cargando datos: ${e.message}</div>`;
+  }
+}
 </script>
   <!-- Sidebar float button (aparece cuando sidebar está oculto) -->
   <button id="sidebar-float-btn" onclick="toggleSidebar()" title="Mostrar servidores">
@@ -3758,6 +4039,36 @@ NOTIF.updateBadge();
 <div class="notif-toast" id="notifToast">
   <span class="notif-toast-icon" id="notifToastIcon">🔔</span>
   <span id="notifToastText"></span>
+</div>
+
+
+<!-- Comparativa Modal -->
+<div class="cmp-modal-overlay" id="cmpOverlay" onclick="if(event.target===this) closeComparativa()">
+  <div class="cmp-modal">
+    <div class="cmp-header">
+      <span>// COMPARATIVA DE SERVIDORES</span>
+      <button onclick="closeComparativa()">✕</button>
+    </div>
+    <div class="cmp-selectors">
+      <div class="cmp-selector">
+        <label>SERVIDOR A</label>
+        <select id="cmpSelA" onchange="runComparativa()">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div class="cmp-selector">
+        <label>SERVIDOR B</label>
+        <select id="cmpSelB" onchange="runComparativa()">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+    </div>
+    <div class="cmp-body" id="cmpBody">
+      <div style="text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:40px">
+        Seleccioná dos servidores para comparar
+      </div>
+    </div>
+  </div>
 </div>
 
 </body>
