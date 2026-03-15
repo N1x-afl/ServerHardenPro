@@ -5,6 +5,7 @@
 ║                          Fase 5                                  ║
 ║  + Auth JWT (login / registro / roles)                           ║
 ║  + Inventario de hardware                                        ║
+║  + CrowdSec WAF Integration (v0.7)                               ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
@@ -15,7 +16,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
-import json, asyncio, datetime, os, hmac, hashlib, base64, time
+import json, asyncio, datetime, os, hmac, hashlib, base64, time, subprocess
 
 from report_generator import generate_pdf, generate_excel
 from database import (
@@ -88,7 +89,7 @@ def require_admin(user = Depends(get_current_user)):
 app = FastAPI(
     title="ServerHardenPro API",
     description="API de auditoría de hardening — con Auth JWT e Inventario",
-    version="0.3.0"
+    version="0.7.0"
 )
 
 app.add_middleware(
@@ -166,7 +167,7 @@ async def startup():
     _startup_time = datetime.datetime.now()
     init_db()
     print("✅ Base de datos inicializada")
-    print("🚀 ServerHardenPro API v0.5 en http://0.0.0.0:8000")
+    print("🚀 ServerHardenPro API v0.7.0 en http://0.0.0.0:8000")
 
 # ══════════════════════════════════════════════════════════════════
 #  AUTH ENDPOINTS
@@ -271,7 +272,7 @@ async def global_summary(user = Depends(get_current_user)):
 async def health():
     return {
         "status":     "ok",
-        "version":    "0.5.0",
+        "version":    "0.7.0",
         "time":       datetime.datetime.now().isoformat(),
         "start_time": _startup_time.isoformat()
     }
@@ -337,6 +338,103 @@ async def server_logs(hostname: str, user = Depends(get_current_user)):
 async def server_logs_history(hostname: str, limit: int = 14,
                                user = Depends(get_current_user)):
     return {"hostname": hostname, "history": get_log_history(hostname, limit)}
+
+# ══════════════════════════════════════════════════════════════════
+#  CROWDSEC ENDPOINTS (NEW v0.7)
+# ══════════════════════════════════════════════════════════════════
+
+@app.get("/crowdsec/decisions", summary="IPs baneadas por CrowdSec")
+async def get_crowdsec_decisions(user = Depends(get_current_user)):
+    """
+    Lista IPs baneadas en tiempo real.
+    Solo usuarios autenticados pueden consultar.
+    """
+    try:
+        result = subprocess.run(
+            ["docker", "exec", "shp_crowdsec", "cscli", "decisions", "list", "-o", "json"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode == 0:
+            data = json.loads(result.stdout) if result.stdout.strip() else []
+            return {
+                "status": "ok",
+                "count": len(data) if isinstance(data, list) else 0,
+                "decisions": data,
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+        else:
+            return {
+                "status": "error",
+                "message": result.stderr if result.stderr else "CrowdSec no disponible",
+                "count": 0,
+                "decisions": []
+            }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="CrowdSec timeout (>5s)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error CrowdSec: {str(e)}")
+
+@app.get("/crowdsec/alerts", summary="Alertas detectadas por CrowdSec (últimas 48h)")
+async def get_crowdsec_alerts(user = Depends(get_current_user)):
+    """
+    Lista alertas de fuerza bruta, escaneos y CVEs HTTP detectados.
+    Solo usuarios autenticados pueden consultar.
+    """
+    try:
+        result = subprocess.run(
+            ["docker", "exec", "shp_crowdsec", "cscli", "alerts", "list", "-o", "json"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode == 0:
+            data = json.loads(result.stdout) if result.stdout.strip() else []
+            return {
+                "status": "ok",
+                "count": len(data) if isinstance(data, list) else 0,
+                "alerts": data,
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+        else:
+            return {
+                "status": "error",
+                "message": result.stderr if result.stderr else "CrowdSec no disponible",
+                "count": 0,
+                "alerts": []
+            }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="CrowdSec timeout (>5s)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error alerts: {str(e)}")
+
+@app.get("/crowdsec/metrics", summary="Métricas de CrowdSec")
+async def get_crowdsec_metrics(user = Depends(get_current_user)):
+    """
+    Estadísticas de CrowdSec:
+    - Logs parseados
+    - Colecciones activas
+    - Reglas activas
+    - Whitelist aplicada
+    """
+    try:
+        result = subprocess.run(
+            ["docker", "exec", "shp_crowdsec", "cscli", "metrics"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode == 0:
+            return {
+                "status": "ok",
+                "metrics_raw": result.stdout,
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+        else:
+            return {
+                "status": "error",
+                "message": result.stderr if result.stderr else "CrowdSec no disponible",
+                "metrics_raw": ""
+            }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="CrowdSec timeout (>5s)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error metrics: {str(e)}")
 
 # ── WebSocket ─────────────────────────────────────────────────────
 @app.websocket("/ws")
