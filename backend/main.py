@@ -157,11 +157,16 @@ class AuditResult(BaseModel):
 # ══════════════════════════════════════════════════════════════════
 #  STARTUP
 # ══════════════════════════════════════════════════════════════════
+# ── Tiempo de inicio del servidor ────────────────────────────────
+_startup_time = datetime.datetime.now()
+
 @app.on_event("startup")
 async def startup():
+    global _startup_time
+    _startup_time = datetime.datetime.now()
     init_db()
     print("✅ Base de datos inicializada")
-    print("🚀 ServerHardenPro API v0.3 en http://0.0.0.0:8000")
+    print("🚀 ServerHardenPro API v0.5 en http://0.0.0.0:8000")
 
 # ══════════════════════════════════════════════════════════════════
 #  AUTH ENDPOINTS
@@ -264,7 +269,12 @@ async def global_summary(user = Depends(get_current_user)):
 
 @app.get("/health", summary="Healthcheck")
 async def health():
-    return {"status": "ok", "version": "0.3.0", "time": datetime.datetime.now().isoformat()}
+    return {
+        "status":     "ok",
+        "version":    "0.5.0",
+        "time":       datetime.datetime.now().isoformat(),
+        "start_time": _startup_time.isoformat()
+    }
 
 # ── Reportes (solo admin puede descargar) ─────────────────────────
 @app.get("/servers/{hostname}/report/pdf")
