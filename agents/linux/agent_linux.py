@@ -604,7 +604,9 @@ def run_audit():
             "hostname": hostname,
             "os": distro_name,
             "os_full": os_info,
-            "ip": socket.gethostbyname(hostname),
+            "ip": os.environ.get("SHP_IP") or __import__('subprocess').check_output(
+                "ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' || hostname -I | awk '{print $1}'",
+                shell=True).decode().strip(),
             "audit_date": now,
             "agent_version": "0.4"
         },
