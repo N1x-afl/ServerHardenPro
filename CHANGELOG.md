@@ -118,3 +118,19 @@ Todos los cambios notables del proyecto / All notable changes.
 - Fix IP 127.0.0.1 en agentes con detección via `ip route`
 - Fix dropdown EXPORTAR cerrándose antes de seleccionar
 - Fix `start_time` en endpoint `/health` para uptime real
+
+---
+
+## [v0.7.0] — 2026-03-15
+
+### ✨ Nuevas features
+- **CrowdSec WAF** — detección y bloqueo automático de IPs maliciosas
+  - Colecciones: nginx, linux, sshd, http-cve, base-http-scenarios
+  - Whitelist automática de IPs de red local
+  - Script `crowdsec_setup.sh` para configuración automática del bouncer
+- **Contenedor crowdsec-bouncer** — integrado con Nginx via API
+- **Logs de Nginx compartidos** — volumen Docker entre Nginx y CrowdSec
+
+### 🔧 Infraestructura
+- `docker-compose.yml` actualizado con 4 servicios: backend, nginx, crowdsec, bouncer
+- Volúmenes persistentes para DB de CrowdSec y configuración

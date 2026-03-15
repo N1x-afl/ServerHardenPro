@@ -2,11 +2,12 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-0.6.0-cyan?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.7.0-cyan?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=for-the-badge&logo=fastapi)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge&logo=docker)
 ![Nginx](https://img.shields.io/badge/Nginx-HTTPS-009639?style=for-the-badge&logo=nginx)
+![CrowdSec](https://img.shields.io/badge/CrowdSec-WAF-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
 **Plataforma profesional de auditoría de hardening para servidores Linux y Windows**
@@ -21,7 +22,7 @@
 
 ## 📋 ¿Qué es ServerHardenPro?
 
-ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, envía los resultados a un panel web centralizado en tiempo real y permite visualizar el estado de seguridad de toda tu infraestructura desde un solo lugar — con HTTPS, notificaciones, análisis de logs y reportes automáticos.
+ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, envía los resultados a un panel web centralizado en tiempo real y permite visualizar el estado de seguridad de toda tu infraestructura — con HTTPS, WAF, notificaciones, análisis de logs y reportes automáticos.
 
 ---
 
@@ -31,6 +32,7 @@ ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, e
 |---------|-------------|
 | 🔐 Auth JWT | Login y registro con roles Admin / Viewer |
 | 🔒 HTTPS | Nginx reverse proxy con certificado self-signed |
+| 🛡️ CrowdSec WAF | Detección y bloqueo automático de IPs maliciosas |
 | 📊 Panel DevSecOps | CVEs, Timeline, Comparativa, Recomendaciones |
 | 📈 Gráficos en tiempo real | Auth events, Score trend, Top IPs atacantes |
 | 🔔 Notificaciones | Panel lateral con alertas de CRIT, nuevo servidor, check crítico |
@@ -39,8 +41,8 @@ ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, e
 | 🐧 Agente Linux | 22 checks — SSH, Firewall, Usuarios, Red, Servicios |
 | 🪟 Agente Windows | 25 checks — Contraseñas, RDP, SMB, Defender, UAC |
 | 🖥️ Inventario | CPU, RAM, Disco, Uptime, detección VM/Físico |
-| 📋 Análisis de Logs | auth.log + syslog + Event Logs, detección de fuerza bruta |
-| ⏱️ Uptime | Contador de tiempo activo del backend en tiempo real |
+| 📋 Análisis de Logs | auth.log + syslog + Event Logs Windows, detección de fuerza bruta |
+| ⏱️ Uptime | Contador de tiempo activo del backend en el header |
 | 🔎 Buscador | Filtrado de checks en tiempo real |
 | ⏰ Automatización | Cron (Linux) y Task Scheduler (Windows) |
 | 📄 Reportes PDF/Excel | Descargables (solo Admin) |
@@ -60,16 +62,31 @@ ServerHardenPro ejecuta checklists de hardening en servidores Linux y Windows, e
 ## 🏗️ Arquitectura
 
 ```
+Browser
+  │
+  ▼
+Nginx (443 HTTPS / 80 → redirect)
+  │
+  ├── CrowdSec Bouncer (bloquea IPs maliciosas)
+  │
+  ▼
+FastAPI Backend (8000 interno)
+  │
+  ▼
+SQLite DB
+```
+
+```
 ServerHardenPro/
 ├── frontend/
 │   └── dashboard.html
 ├── agents/
 │   ├── linux/
 │   │   ├── agent_linux.py
-│   │   └── install_cron.sh       # Instalador de cron automático
+│   │   └── install_cron.sh
 │   └── windows/
 │       ├── agent_windows.py
-│       └── install_task.ps1      # Instalador Task Scheduler
+│       └── install_task.ps1
 ├── backend/
 │   ├── main.py
 │   ├── database.py
@@ -77,10 +94,13 @@ ServerHardenPro/
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── nginx/
-│   ├── conf/nginx.conf           # Reverse proxy + HTTPS
-│   └── certs/                    # Certificados SSL
+│   ├── conf/nginx.conf
+│   └── certs/
 │       ├── server.crt
 │       └── server.key
+├── crowdsec/
+│   ├── acquis.yaml
+│   └── crowdsec_setup.sh
 └── docker-compose.yml
 ```
 
@@ -109,19 +129,24 @@ openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -addext "subjectAltName=IP:TU_IP,IP:127.0.0.1,DNS:localhost"
 ```
 
-### 3. Levantar el backend
+### 3. Levantar todos los servicios
 ```bash
 docker compose up -d --build
 ```
 
-### 4. Acceder al panel
+### 4. Configurar CrowdSec (una sola vez)
+```bash
+bash crowdsec/crowdsec_setup.sh
+```
+
+### 5. Acceder al panel
 ```
 https://TU_IP
 ```
 
 > 💡 La primera vez el browser muestra advertencia de certificado — clic en **Avanzado → Continuar**. No vuelve a aparecer.
 
-### 5. Primer acceso
+### 6. Primer acceso
 Hacé clic en **REGISTRARSE** — el primer usuario es automáticamente **Admin**.
 
 ---
@@ -134,7 +159,7 @@ Hacé clic en **REGISTRARSE** — el primer usuario es automáticamente **Admin*
 # En el mismo servidor del backend
 SHP_API=https://localhost/audit SHP_IP=192.168.1.100 sudo -E python3 agents/linux/agent_linux.py
 
-# En un servidor diferente
+# En un servidor diferente de la red
 SHP_API=https://IP_BACKEND/audit SHP_IP=192.168.1.200 sudo -E python3 agents/linux/agent_linux.py
 ```
 
@@ -149,16 +174,22 @@ $env:SHP_IP  = "192.168.1.50"
 python agent_windows.py
 ```
 
+### Múltiples servidores → un solo backend
+
+Cada servidor de la red puede reportar al mismo backend:
+```bash
+SHP_API=https://192.168.1.100/audit SHP_IP=192.168.1.200 sudo -E python3 agent_linux.py
+```
+
 ---
 
-## ⏰ Automatización (cron / Task Scheduler)
+## ⏰ Automatización
 
 ### Linux — instalar cron
 ```bash
 sudo bash ~/ServerHardenPro/agents/linux/install_cron.sh
 # Pide: URL del backend, intervalo (1h / 6h / 12h / 24h)
 ```
-
 Logs en `/var/log/shp/agent.log`
 
 ### Windows — instalar Task Scheduler
@@ -167,23 +198,53 @@ Logs en `/var/log/shp/agent.log`
 .\agents\windows\install_task.ps1
 # Pide: URL del backend, IP del equipo, intervalo
 ```
-
 Logs en `C:\ProgramData\ServerHardenPro\logs\`
 
 ---
 
 ## 🔒 HTTPS con Nginx
 
-El tráfico pasa por Nginx antes de llegar al backend:
-
 ```
 Browser → https://IP:443 → Nginx → http://backend:8000
           http://IP:80   → redirige a HTTPS automáticamente
 ```
 
-El certificado self-signed es válido para uso en red local. El backend ya no es accesible directamente desde el exterior.
+El certificado self-signed es ideal para uso en red local. El backend no es accesible directamente desde el exterior.
 
 > ⚠️ Agregá `nginx/certs/server.key` al `.gitignore` — nunca subas la clave privada al repo.
+
+---
+
+## 🛡️ CrowdSec WAF
+
+CrowdSec analiza los logs de Nginx en tiempo real y bloquea automáticamente IPs que realizan ataques:
+
+| Protección | Descripción |
+|------------|-------------|
+| Fuerza bruta HTTP | Múltiples requests fallidos |
+| Escaneo de puertos | Detección de reconocimiento |
+| CVEs conocidos | Exploits HTTP documentados |
+| Bad bots | Scanners y crawlers maliciosos |
+
+> ✅ Las IPs de red local (`192.168.x.x`) están whitelisted automáticamente — nunca serás bloqueado por accidente.
+
+### Comandos útiles
+```bash
+# Ver IPs baneadas
+docker exec shp_crowdsec cscli decisions list
+
+# Ver alertas detectadas
+docker exec shp_crowdsec cscli alerts list
+
+# Ver métricas
+docker exec shp_crowdsec cscli metrics
+
+# Banear IP manualmente
+docker exec shp_crowdsec cscli decisions add --ip 1.2.3.4
+
+# Desbanear IP
+docker exec shp_crowdsec cscli decisions delete --ip 1.2.3.4
+```
 
 ---
 
@@ -220,6 +281,7 @@ El certificado self-signed es válido para uso en red local. El backend ya no es
 | GET | `/health` | No | Healthcheck + uptime |
 | POST | `/auth/register` | No | Registrar usuario |
 | POST | `/auth/login` | No | Iniciar sesión |
+| GET | `/auth/me` | JWT | Perfil usuario |
 | POST | `/audit` | No | Recibir auditoría |
 | POST | `/logs` | No | Recibir logs |
 | GET | `/servers` | JWT | Listar servidores |
@@ -231,21 +293,21 @@ El certificado self-signed es válido para uso en red local. El backend ya no es
 | GET | `/servers/{hostname}/report/excel` | Admin | Excel |
 | GET | `/summary` | JWT | Estadísticas globales |
 | WS | `/ws` | No | WebSocket tiempo real |
-| GET | `/docs` | No | Swagger |
+| GET | `/docs` | No | Swagger UI |
 
 ---
 
 ## 🔔 Sistema de Notificaciones
 
-El panel incluye un sistema de notificaciones con panel lateral deslizable:
+Panel lateral deslizable con 3 tipos de alertas:
 
 | Tipo | Trigger |
 |------|---------|
-| 🆕 Nuevo servidor | Primera vez que un servidor reporta |
-| 🚨 Score crítico | Score < 40% (máximo 1 alerta/hora por servidor) |
+| 🆕 Nuevo servidor | Primera vez que reporta |
+| 🚨 Score crítico | Score < 40% (máximo 1 alerta/hora) |
 | ⚠️ Check crítico | FAIL en Firewall, Telnet, RDP, SMBv1, Defender |
 
-Las notificaciones se guardan en `localStorage` y persisten entre sesiones.
+Las notificaciones persisten en `localStorage` entre sesiones.
 
 ---
 
@@ -289,7 +351,7 @@ docker compose up -d
 ```javascript
 // F12 → Console
 localStorage.clear(); location.reload();
-// En Settings: usar https://IP (sin puerto)
+// En Settings usar: https://IP (sin puerto)
 ```
 
 **Certificado rechazado:**
@@ -300,12 +362,18 @@ En el browser → Avanzado → Continuar de todas formas
 SHP_IP=192.168.1.100 sudo -E python3 agent_linux.py
 ```
 
+**CrowdSec bloqueó mi IP:**
+```bash
+docker exec shp_crowdsec cscli decisions delete --ip TU_IP
+```
+
 ---
 
 ## 🛠️ Stack tecnológico
 
 | Capa | Tecnología |
 |------|-----------|
+| WAF | CrowdSec + Bouncer |
 | Reverse proxy | Nginx + SSL self-signed |
 | Backend | FastAPI + Uvicorn |
 | Auth | JWT HS256 |
@@ -322,7 +390,7 @@ SHP_IP=192.168.1.100 sudo -E python3 agent_linux.py
 
 1. Fork → branch → commit → PR
 
-Áreas: nuevos checks, soporte RHEL/Alpine/macOS, traducciones.
+Áreas: nuevos checks, soporte RHEL/Alpine/macOS, traducciones, nuevos escenarios CrowdSec.
 
 ---
 
@@ -332,4 +400,4 @@ MIT © 2025 — ServerHardenPro
 
 ---
 
-*// ServerHardenPro v0.6.0 — FastAPI + Nginx + SQLite + WebSockets + Chart.js*
+*// ServerHardenPro v0.7.0 — FastAPI + Nginx + CrowdSec + SQLite + WebSockets + Chart.js*
