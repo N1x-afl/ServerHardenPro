@@ -1,6 +1,6 @@
 version: "3.9"
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║         ServerHardenPro — Docker Compose v0.5                   ║
+# ║         ServerHardenPro — Docker Compose v0.6                   ║
 # ║  Uso: docker compose up -d --build                               ║
 # ║  Panel: https://TU_IP  (HTTPS — puerto 443)                     ║
 # ║  API:   https://TU_IP/docs                                       ║
@@ -40,9 +40,39 @@ services:
     volumes:
       - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
+      - nginx_logs:/var/log/nginx
     depends_on:
       backend:
         condition: service_healthy
+      crowdsec:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - shp_net
+
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    container_name: shp_crowdsec
+    environment:
+      - COLLECTIONS=crowdsecurity/nginx
+      - GID=1000
+    volumes:
+      - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - crowdsec_db:/var/lib/crowdsec/data
+      - crowdsec_config:/etc/crowdsec
+      - nginx_logs:/var/log/nginx:ro
+    restart: unless-stopped
+    networks:
+      - shp_net
+
+  crowdsec-bouncer:
+    image: fbonalair/traefik-crowdsec-bouncer:latest
+    container_name: shp_bouncer
+    environment:
+      - CROWDSEC_BOUNCER_API_KEY=shp-bouncer-key-change-this
+      - CROWDSEC_AGENT_HOST=crowdsec:8080
+    depends_on:
+      - crowdsec
     restart: unless-stopped
     networks:
       - shp_net
@@ -53,4 +83,10 @@ networks:
 
 volumes:
   shp_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  crowdsec_db:
+    driver: local
+  crowdsec_config:
     driver: local

@@ -1,0 +1,11 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║     ServerHardenPro — CrowdSec Acquisition Config               ║
+# ║     Define qué logs lee CrowdSec                                ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Logs de acceso de Nginx
+filenames:
+  - /var/log/nginx/shp_access.log
+  - /var/log/nginx/shp_error.log
+labels:
+  type: nginx
