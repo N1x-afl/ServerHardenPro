@@ -94,3 +94,27 @@ Todos los cambios notables del proyecto / All notable changes.
 - **Backend FastAPI** con SQLite
 - **Panel web** básico con lista de servidores
 - **Docker Compose** para despliegue rápido
+
+---
+
+## [v0.6.0] — 2026-03-15
+
+### ✨ Nuevas features
+- **Nginx reverse proxy** — HTTPS con certificado self-signed, redirect HTTP→HTTPS
+- **Sistema de notificaciones** — panel lateral deslizable con alertas de CRIT, nuevo servidor y checks críticos
+- **Filtros en sidebar** — TODOS / CRIT / WARN / OK en tiempo real
+- **Comparativa lado a lado** — modal con tabla comparativa entre dos servidores
+- **Uptime del backend** — contador en tiempo real en el header
+- **Buscador de checks** — filtrado en tiempo real dentro del detalle del servidor
+- **Cron automático Linux** — `install_cron.sh` interactivo con intervalos configurables
+- **Task Scheduler Windows** — `install_task.ps1` con soporte de SHP_IP
+- **Agente Windows** — inventario de hardware + análisis de Event Logs (4625/4624)
+- **Soporte HTTPS en agentes** — SSL_CTX acepta certificados self-signed
+- **SHP_IP** — variable de entorno para forzar IP correcta en ambos agentes
+
+### 🐛 Fixes
+- Fix Mixed Content al pasar de HTTP a HTTPS
+- Fix API URL auto-detecta protocolo y puerto (HTTP/HTTPS)
+- Fix IP 127.0.0.1 en agentes con detección via `ip route`
+- Fix dropdown EXPORTAR cerrándose antes de seleccionar
+- Fix `start_time` en endpoint `/health` para uptime real
