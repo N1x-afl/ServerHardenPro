@@ -5,6 +5,7 @@
 ║                          v0.5                                    ║
 ║  Uso normal:  python agent_windows.py                            ║
 ║  Custom API:  set SHP_API=https://IP && python agent_windows.py  ║
+║  Custom IP:   set SHP_IP=192.168.1.100 && python agent_windows.py║
 ║  Requiere: ejecutar como Administrador                           ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
@@ -518,6 +519,252 @@ def print_result(check):
     print(f"  {icon}  {cat}  {name}")
     print(f"         {detail}")
 
+
+# ══════════════════════════════════════════════════════════════════
+#  INVENTARIO DE HARDWARE
+# ══════════════════════════════════════════════════════════════════
+
+def get_inventory():
+    """Recopila información de hardware del sistema Windows."""
+    inv = {}
+
+    # CPU
+    try:
+        cpu_name = ps("(Get-WmiObject Win32_Processor).Name").strip()
+        cpu_cores = ps("(Get-WmiObject Win32_Processor).NumberOfLogicalProcessors").strip()
+        cpu_freq  = ps("(Get-WmiObject Win32_Processor).MaxClockSpeed").strip()
+        inv["cpu"] = f"{cpu_name} ({cpu_cores} cores @ {int(cpu_freq or 0)//1000:.1f} GHz)"
+    except:
+        inv["cpu"] = "N/A"
+
+    # RAM
+    try:
+        total_kb = ps("(Get-WmiObject Win32_ComputerSystem).TotalPhysicalMemory").strip()
+        free_kb  = ps("(Get-WmiObject Win32_OperatingSystem).FreePhysicalMemory").strip()
+        total_gb = int(total_kb or 0) / (1024**3)
+        free_gb  = int(free_kb or 0) / (1024**2) / 1024
+        used_pct = round((1 - free_gb/total_gb) * 100) if total_gb > 0 else 0
+        inv["ram_total_gb"]  = round(total_gb, 2)
+        inv["ram_free_gb"]   = round(free_gb, 2)
+        inv["ram_used_pct"]  = used_pct
+    except:
+        inv["ram_total_gb"] = inv["ram_free_gb"] = inv["ram_used_pct"] = 0
+
+    # Disco
+    try:
+        disk_info = ps("Get-WmiObject Win32_LogicalDisk -Filter \"DriveType=3\" | Select-Object DeviceID,Size,FreeSpace | ConvertTo-Json")
+        disks = json.loads(disk_info) if disk_info.strip().startswith('[') else [json.loads(disk_info)] if disk_info.strip().startswith('{') else []
+        disk_list = []
+        for d in disks:
+            size = int(d.get("Size") or 0)
+            free = int(d.get("FreeSpace") or 0)
+            if size > 0:
+                used_pct = round((1 - free/size)*100)
+                disk_list.append({
+                    "mount": d.get("DeviceID","?"),
+                    "total_gb": round(size/(1024**3),1),
+                    "free_gb":  round(free/(1024**3),1),
+                    "used_pct": used_pct
+                })
+        inv["disks"] = disk_list
+    except:
+        inv["disks"] = []
+
+    # Uptime
+    try:
+        boot_time = ps("(Get-CimInstance Win32_OperatingSystem).LastBootUpTime").strip()
+        inv["boot_time"] = boot_time[:19] if boot_time else "N/A"
+    except:
+        inv["boot_time"] = "N/A"
+
+    # Tipo de equipo (VM/Físico)
+    try:
+        model = ps("(Get-WmiObject Win32_ComputerSystem).Model").strip()
+        manufacturer = ps("(Get-WmiObject Win32_ComputerSystem).Manufacturer").strip()
+        vm_keywords = ["virtual", "vmware", "virtualbox", "hyper-v", "kvm", "xen", "qemu"]
+        is_vm = any(kw in (model + manufacturer).lower() for kw in vm_keywords)
+        inv["is_vm"]       = is_vm
+        inv["vm_type"]     = model if is_vm else "Físico"
+        inv["manufacturer"] = manufacturer
+        inv["model"]        = model
+    except:
+        inv["is_vm"] = False
+        inv["vm_type"] = "Físico"
+
+    # Windows version
+    try:
+        win_ver = ps("(Get-WmiObject Win32_OperatingSystem).Caption").strip()
+        win_build = ps("(Get-WmiObject Win32_OperatingSystem).BuildNumber").strip()
+        inv["os_full"] = f"{win_ver} (Build {win_build})"
+    except:
+        inv["os_full"] = platform.platform()
+
+    return inv
+
+
+# ══════════════════════════════════════════════════════════════════
+#  ANÁLISIS DE EVENT LOGS
+# ══════════════════════════════════════════════════════════════════
+
+def analyze_logs(hours=24):
+    """Analiza Event Logs de Windows en busca de eventos de seguridad."""
+    print(f"\n{C.CYAN}  📋 Analizando Event Logs (últimas {hours}hs)...{C.RESET}")
+
+    log_data = {
+        "hostname":          socket.gethostname(),
+        "period_hours":      hours,
+        "auth_fail_total":   0,
+        "auth_ok_total":     0,
+        "brute_force_count": 0,
+        "syslog_error_count": 0,
+        "syslog_crit_count": 0,
+        "top_ips":    [],
+        "top_users":  [],
+        "brute_events": [],
+        "syslog_errors": []
+    }
+
+    try:
+        # Auth failures (Event ID 4625 — Login fallido)
+        fail_cmd = f"""
+$start = (Get-Date).AddHours(-{hours})
+$events = Get-WinEvent -FilterHashtable @{{
+    LogName='Security'; Id=4625; StartTime=$start
+}} -ErrorAction SilentlyContinue
+$count = if ($events) {{ ($events | Measure-Object).Count }} else {{ 0 }}
+Write-Output $count
+"""
+        fail_count = ps(fail_cmd).strip()
+        log_data["auth_fail_total"] = int(fail_count or 0)
+
+        # Auth success (Event ID 4624 — Login exitoso)
+        ok_cmd = f"""
+$start = (Get-Date).AddHours(-{hours})
+$events = Get-WinEvent -FilterHashtable @{{
+    LogName='Security'; Id=4624; StartTime=$start
+}} -ErrorAction SilentlyContinue
+$count = if ($events) {{ ($events | Measure-Object).Count }} else {{ 0 }}
+Write-Output $count
+"""
+        ok_count = ps(ok_cmd).strip()
+        log_data["auth_ok_total"] = int(ok_count or 0)
+
+        # Brute force detection (5+ failures from same account in 10 min)
+        brute_cmd = f"""
+$start = (Get-Date).AddHours(-{hours})
+$events = Get-WinEvent -FilterHashtable @{{
+    LogName='Security'; Id=4625; StartTime=$start
+}} -ErrorAction SilentlyContinue
+if ($events) {{
+    $grouped = $events | ForEach-Object {{
+        $xml = [xml]$_.ToXml()
+        $xml.Event.EventData.Data | Where-Object {{ $_.Name -eq 'TargetUserName' }} | Select-Object -ExpandProperty '#text'
+    }} | Group-Object | Where-Object {{ $_.Count -ge 5 }} | Sort-Object Count -Descending | Select-Object -First 5
+    if ($grouped) {{
+        $grouped | ForEach-Object {{ "$($_.Name):$($_.Count)" }}
+    }}
+}}
+"""
+        brute_raw = ps(brute_cmd).strip()
+        if brute_raw:
+            brute_events = []
+            for line in brute_raw.splitlines():
+                if ':' in line:
+                    user, count = line.rsplit(':', 1)
+                    brute_events.append({"user": user.strip(), "count": int(count.strip())})
+            log_data["brute_events"]    = brute_events
+            log_data["brute_force_count"] = len(brute_events)
+
+        # Top users with failures
+        top_users_cmd = f"""
+$start = (Get-Date).AddHours(-{hours})
+$events = Get-WinEvent -FilterHashtable @{{
+    LogName='Security'; Id=4625; StartTime=$start
+}} -ErrorAction SilentlyContinue
+if ($events) {{
+    $events | ForEach-Object {{
+        $xml = [xml]$_.ToXml()
+        $xml.Event.EventData.Data | Where-Object {{ $_.Name -eq 'TargetUserName' }} | Select-Object -ExpandProperty '#text'
+    }} | Group-Object | Sort-Object Count -Descending | Select-Object -First 5 | ForEach-Object {{ "$($_.Name):$($_.Count)" }}
+}}
+"""
+        top_users_raw = ps(top_users_cmd).strip()
+        if top_users_raw:
+            top_users = []
+            for line in top_users_raw.splitlines():
+                if ':' in line:
+                    user, count = line.rsplit(':', 1)
+                    top_users.append({"user": user.strip(), "count": int(count.strip())})
+            log_data["top_users"] = top_users
+
+        # System errors (Event Log System — Error/Critical)
+        sys_err_cmd = f"""
+$start = (Get-Date).AddHours(-{hours})
+$errors = Get-WinEvent -FilterHashtable @{{
+    LogName='System'; Level=2; StartTime=$start
+}} -ErrorAction SilentlyContinue
+$crits = Get-WinEvent -FilterHashtable @{{
+    LogName='System'; Level=1; StartTime=$start
+}} -ErrorAction SilentlyContinue
+$errCount  = if ($errors) {{ ($errors | Measure-Object).Count }} else {{ 0 }}
+$critCount = if ($crits)  {{ ($crits  | Measure-Object).Count }} else {{ 0 }}
+Write-Output "$errCount $critCount"
+"""
+        sys_raw = ps(sys_err_cmd).strip().split()
+        if len(sys_raw) >= 2:
+            log_data["syslog_error_count"] = int(sys_raw[0] or 0)
+            log_data["syslog_crit_count"]  = int(sys_raw[1] or 0)
+
+        # Recent critical system events
+        crit_events_cmd = f"""
+$start = (Get-Date).AddHours(-{hours})
+$events = Get-WinEvent -FilterHashtable @{{
+    LogName='System'; Level=1; StartTime=$start
+}} -ErrorAction SilentlyContinue | Select-Object -First 5
+if ($events) {{
+    $events | ForEach-Object {{ "$($_.TimeCreated.ToString('yyyy-MM-dd HH:mm'))|$($_.ProviderName)|$($_.Message.Substring(0,[Math]::Min(80,$_.Message.Length)))" }}
+}}
+"""
+        crit_raw = ps(crit_events_cmd).strip()
+        if crit_raw:
+            crit_list = []
+            for line in crit_raw.splitlines():
+                parts = line.split('|', 2)
+                if len(parts) == 3:
+                    crit_list.append({
+                        "time": parts[0], "source": parts[1], "message": parts[2]
+                    })
+            log_data["syslog_errors"] = crit_list
+
+    except Exception as e:
+        print(f"  {C.YELLOW}⚠  Error analizando logs: {e}{C.RESET}")
+
+    print(f"  {C.RED}❌ Auth fallidos  :{C.RESET} {log_data['auth_fail_total']}")
+    print(f"  {C.GREEN}✅ Auth exitosos  :{C.RESET} {log_data['auth_ok_total']}")
+    print(f"  {C.YELLOW}⚠  Errores sistema:{C.RESET} {log_data['syslog_error_count']} errores / {log_data['syslog_crit_count']} críticos")
+    if log_data["brute_force_count"] > 0:
+        print(f"  {C.RED}🚨 Fuerza bruta   :{C.RESET} {log_data['brute_force_count']} cuenta(s) sospechosa(s)")
+
+    return log_data
+
+
+def send_logs(log_data: dict):
+    """Envía análisis de logs al backend."""
+    log_url = API_URL.replace("/audit", "/logs")
+    print(f"\n{C.CYAN}  📡 Enviando análisis de logs...{C.RESET}")
+    try:
+        body = json.dumps(log_data, ensure_ascii=False, default=str).encode("utf-8")
+        req  = urllib.request.Request(
+            log_url, data=body,
+            headers={"Content-Type": "application/json"}, method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=15, context=SSL_CTX) as resp:
+            result = json.loads(resp.read().decode())
+            print(f"  {C.GREEN}✅ Logs enviados:{C.RESET} {result.get('message','OK')}\n")
+    except Exception as e:
+        print(f"  {C.YELLOW}⚠  No se pudieron enviar los logs:{C.RESET} {e}\n")
+
+
 def run_audit():
     print_banner()
 
@@ -558,14 +805,22 @@ def run_audit():
     print(f"  {C.YELLOW}⚠  WARN  : {totals['WARN']}{C.RESET}")
     print(f"  {C.CYAN}📊 SCORE : {score}%{C.RESET}\n")
 
+    # ── Inventario ──
+    print(f"\n{C.CYAN}  🖥️  Recopilando inventario de hardware...{C.RESET}")
+    inventory = get_inventory()
+    print(f"  {C.GREEN}✅ CPU   :{C.RESET} {inventory.get('cpu','N/A')}")
+    print(f"  {C.GREEN}✅ RAM   :{C.RESET} {inventory.get('ram_total_gb',0)} GB total / {inventory.get('ram_free_gb',0)} GB libre")
+    print(f"  {C.GREEN}✅ Tipo  :{C.RESET} {'VM — ' + inventory.get('vm_type','') if inventory.get('is_vm') else 'Físico'}")
+
     # ── JSON ──
     output = {
         "server": {
             "hostname": hostname,
             "os": os_info,
-            "ip": socket.gethostbyname(hostname),
+            "os_full": inventory.get("os_full", os_info),
+            "ip": os.environ.get("SHP_IP") or socket.gethostbyname(hostname),
             "audit_date": now,
-            "agent_version": "0.1",
+            "agent_version": "0.5",
             "platform": "windows"
         },
         "summary": {
@@ -575,7 +830,8 @@ def run_audit():
             "warn": totals["WARN"],
             "score_percent": score
         },
-        "checks": results
+        "checks": results,
+        "inventory": inventory
     }
 
     # Guardar JSON localmente como backup
@@ -586,6 +842,11 @@ def run_audit():
 
     # Enviar al backend
     send_to_panel(output)
+
+    # Analizar y enviar logs
+    log_data = analyze_logs(hours=24)
+    log_data["hostname"] = hostname
+    send_logs(log_data)
 
     return output
 
