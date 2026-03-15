@@ -42,6 +42,10 @@ if (-not $ApiUrl) {
     if (-not $ApiUrl) { $ApiUrl = "https://localhost" }
 }
 
+# Pedir IP si no se pasó
+$SHPIp = Read-Host "`n  IP de este equipo (Enter para detectar automáticamente)"
+
+
 # ── Pedir intervalo ───────────────────────────────────────────────
 Write-Host "`n  Intervalo de auditoría:" -ForegroundColor Cyan
 Write-Host "  1) Cada 1 hora"
@@ -71,9 +75,16 @@ $logFile  = "$logDir\agent.log"
 Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
 
 # Acción
+# Build argument string
+$agentArgs = "`"$agentPath`" --api `"$ApiUrl`""
+
+# Add SHP_IP to environment if provided
+$envVars = @("SHP_API=$ApiUrl")
+if ($SHPIp) { $envVars += "SHP_IP=$SHPIp" }
+
 $action = New-ScheduledTaskAction `
     -Execute $pythonPath `
-    -Argument "`"$agentPath`" --api `"$ApiUrl`"" `
+    -Argument $agentArgs `
     -WorkingDirectory $PSScriptRoot
 
 # Trigger — repetir cada X horas
@@ -109,6 +120,7 @@ $runNow = Read-Host "`n  ¿Ejecutar auditoría ahora para verificar? (s/N)"
 if ($runNow -eq "s" -or $runNow -eq "S") {
     Write-Host "  Ejecutando auditoría...`n" -ForegroundColor Cyan
     $env:SHP_API = $ApiUrl
+    if ($SHPIp) { $env:SHP_IP = $SHPIp }
     & $pythonPath $agentPath
 }
 
