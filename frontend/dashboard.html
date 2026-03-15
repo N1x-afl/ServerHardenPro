@@ -1472,6 +1472,56 @@ header {
 }
 .cmp-btn:hover { opacity: .85; }
 
+
+/* ── Backend uptime ─────────────────────────────────── */
+.backend-uptime {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--muted); letter-spacing: 1px;
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.backend-uptime .uptime-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+
+/* ── Check search ───────────────────────────────────── */
+.checks-search-wrap {
+  padding: 10px 16px 0;
+  position: relative;
+}
+.checks-search {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 7px 10px 7px 30px;
+  outline: none;
+  transition: border-color .2s;
+}
+.checks-search:focus { border-color: var(--cyan); }
+.checks-search-icon {
+  position: absolute;
+  left: 26px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  font-size: 12px;
+}
+.check-item.hidden { display: none; }
+.checks-no-results {
+  text-align: center;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--muted); padding: 20px;
+  display: none;
+}
+
 </style>
 </head>
 <body>
@@ -1536,7 +1586,11 @@ header {
       </div>
       <button class="logout-btn" onclick="doLogout()">SALIR</button>
     </div>
-        <div class="ws-badge">
+        <div class="backend-uptime" id="backend-uptime" title="Uptime del backend">
+      <div class="uptime-dot"></div>
+      <span id="uptime-label">BACKEND --</span>
+    </div>
+    <div class="ws-badge">
       <div class="ws-dot" id="ws-dot"></div>
       <span id="ws-label">CONECTANDO...</span>
     </div>
@@ -1721,6 +1775,12 @@ header {
 
       <!-- TAB: CHECKS -->
       <div class="tab-pane active" id="pane-checks">
+        <div class="checks-search-wrap" style="position:relative">
+          <span class="checks-search-icon" style="position:absolute;left:26px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">🔍</span>
+          <input class="checks-search" id="checksSearch" type="text"
+            placeholder="Buscar check..." oninput="filterChecks(this.value)"/>
+        </div>
+        <div class="checks-no-results" id="checksNoResults">Sin resultados</div>
         <div class="table-wrap" id="checks-container">
           <div class="empty-state">
             <div class="empty-icon">🔍</div>
@@ -3334,6 +3394,7 @@ function onAuthSuccess(token, user) {
   toast(`Bienvenido, ${user.username} (${user.role}) ✓`, 'ok');
   loadServers(); loadSummary();
   connectWS();
+  initBackendUptime();
 }
 
 function doLogout() {
@@ -3850,6 +3911,67 @@ async function runComparativa() {
     body.innerHTML = `<div style="text-align:center;color:var(--red);font-family:var(--mono);padding:40px">Error cargando datos: ${e.message}</div>`;
   }
 }
+
+// ═══════════════════════════════════════════════════════
+//  BACKEND UPTIME COUNTER
+// ═══════════════════════════════════════════════════════
+let _backendStartTime = null;
+
+async function initBackendUptime() {
+  try {
+    const res  = await fetch(`${API}/health`);
+    const data = await res.json();
+    _backendStartTime = data.start_time ? new Date(data.start_time) : new Date();
+  } catch(e) {
+    _backendStartTime = new Date();
+  }
+  updateUptimeDisplay();
+  setInterval(updateUptimeDisplay, 1000);
+}
+
+function updateUptimeDisplay() {
+  const label = document.getElementById('uptime-label');
+  if (!label || !_backendStartTime) return;
+  const diff = Math.floor((Date.now() - _backendStartTime.getTime()) / 1000);
+  const d = Math.floor(diff / 86400);
+  const h = Math.floor((diff % 86400) / 3600);
+  const m = Math.floor((diff % 3600) / 60);
+  const s = diff % 60;
+  if (d > 0)      label.textContent = `BACKEND ${d}d ${h}h`;
+  else if (h > 0) label.textContent = `BACKEND ${h}h ${m}m`;
+  else if (m > 0) label.textContent = `BACKEND ${m}m ${s}s`;
+  else            label.textContent = `BACKEND ${s}s`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHECK SEARCH / FILTER
+// ═══════════════════════════════════════════════════════
+function filterChecks(query) {
+  const q = query.toLowerCase().trim();
+  const container = document.getElementById('checks-container');
+  if (!container) return;
+  const items = container.querySelectorAll('tr, .check-row');
+  let visible = 0;
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    const match = !q || text.includes(q);
+    item.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  const noResults = document.getElementById('checksNoResults');
+  if (noResults) noResults.style.display = (q && visible === 0) ? 'block' : 'none';
+}
+
+// Clear search when switching servers
+const _origSelectServer = window.selectServer;
+window.addEventListener('load', () => {
+  const _orig = selectServer;
+  window.selectServer = function(hostname) {
+    const search = document.getElementById('checksSearch');
+    if (search) { search.value = ''; filterChecks(''); }
+    _orig(hostname);
+  };
+});
 </script>
   <!-- Sidebar float button (aparece cuando sidebar está oculto) -->
   <button id="sidebar-float-btn" onclick="toggleSidebar()" title="Mostrar servidores">
